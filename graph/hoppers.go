@@ -5,11 +5,7 @@ import (
 	"math/big"
 
 	"github.com/machinebox/graphql"
-)
-
-const (
-	HOPPERS_GRAPH_URL    = "https://graph-wn13mj22.nftrade.com/subgraphs/name/hoppers"
-	HOPPERS_TOTAL_SUPPLY = 10_000
+	"github.com/steschwa/hopper-analytics-api/constants"
 )
 
 type (
@@ -20,7 +16,7 @@ type (
 
 func NewHoppersGraphClient() *HoppersGraphClient {
 	return &HoppersGraphClient{
-		Graph: graphql.NewClient(HOPPERS_GRAPH_URL),
+		Graph: graphql.NewClient(constants.HOPPERS_GRAPH_URL),
 	}
 }
 
@@ -135,7 +131,7 @@ func parseListing(listingGraph ListingGraph) Listing {
 func (client *HoppersGraphClient) FetchAllHoppers() ([]Hopper, error) {
 	hoppers := make([]Hopper, 0)
 
-	for i := 0; i <= HOPPERS_TOTAL_SUPPLY; i += 1000 {
+	for i := 0; i <= constants.HOPPERS_TOTAL_SUPPLY; i += 1000 {
 		req := graphql.NewRequest(GET_HOPPERS_QUERY)
 		req.Var("skip", i)
 
