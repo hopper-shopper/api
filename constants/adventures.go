@@ -1,5 +1,7 @@
 package constants
 
+import "strings"
+
 const (
 	ADVENTURE_POND_CONTRACT       = "0x85e66216fb0e80f87b54eb39a415c3bbd40e37f9"
 	ADVENTURE_STREAM_CONTRACT     = "0x780feb71117157a039e682668d79584d18579e90"
@@ -19,3 +21,43 @@ const (
 	AdventureForest
 	AdventureGreatLake
 )
+
+func (adventure Adventure) String() string {
+	switch adventure {
+	case AdventurePond:
+		return "pond"
+	case AdventureStream:
+		return "stream"
+	case AdventureSwamp:
+		return "swamp"
+	case AdventureRiver:
+		return "river"
+	case AdventureForest:
+		return "forest"
+	case AdventureGreatLake:
+		return "great-lake"
+	default:
+		return ""
+	}
+}
+
+func AdventureFromString(adventure string) Adventure {
+	lowerCased := strings.ToLower(adventure)
+
+	switch lowerCased {
+	case "pond":
+		return AdventurePond
+	case "stream":
+		return AdventureStream
+	case "swamp":
+		return AdventureSwamp
+	case "river":
+		return AdventureRiver
+	case "forest":
+		return AdventureForest
+	case "great-lake":
+		return AdventureGreatLake
+	default:
+		return AdventurePond
+	}
+}

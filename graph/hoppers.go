@@ -2,10 +2,10 @@ package graph
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/machinebox/graphql"
 	"github.com/steschwa/hopper-analytics-api/constants"
+	"github.com/steschwa/hopper-analytics-api/models"
 )
 
 type (
@@ -21,30 +21,9 @@ func NewHoppersGraphClient() *HoppersGraphClient {
 }
 
 // ----------------------------------------
-// Models
-// ----------------------------------------
-type (
-	Hopper struct {
-		TokenId      string
-		Strength     int
-		Agility      int
-		Vitality     int
-		Intelligence int
-		Market       bool
-		Level        int
-		Adventure    bool
-		Listings     []Listing
-	}
-	Listing struct {
-		Enabled bool
-		Sold    bool
-		Price   *big.Float
-	}
-)
-
-// ----------------------------------------
 // Queries
 // ----------------------------------------
+
 const GET_HOPPERS_QUERY = `
 query($skip: Int!) {
 	hopperNFTs(
@@ -61,6 +40,7 @@ query($skip: Int!) {
 		market
 		level
 		adventure
+		image
 		listings {
 			enabled
 			price
@@ -72,6 +52,7 @@ query($skip: Int!) {
 // ----------------------------------------
 // Graph responses
 // ----------------------------------------
+
 type (
 	HopperGraph struct {
 		TokenId      string         `json:"tokenId"`
@@ -82,6 +63,7 @@ type (
 		Market       bool           `json:"market"`
 		Level        string         `json:"level"`
 		Adventure    bool           `json:"adventure"`
+		Image        string         `json:"image"`
 		Listings     []ListingGraph `json:"listings"`
 	}
 	ListingGraph struct {
@@ -97,14 +79,15 @@ type (
 // ----------------------------------------
 // Graph response converters
 // ----------------------------------------
-func parseHopper(hopperGraph HopperGraph) Hopper {
-	listings := []Listing{}
+
+func parseHopper(hopperGraph HopperGraph) models.Hopper {
+	listings := []models.Listing{}
 
 	for _, listing := range hopperGraph.Listings {
 		listings = append(listings, parseListing(listing))
 	}
 
-	return Hopper{
+	return models.Hopper{
 		TokenId:      hopperGraph.TokenId,
 		Strength:     ParseInt(hopperGraph.Strength),
 		Agility:      ParseInt(hopperGraph.Agility),
@@ -113,12 +96,13 @@ func parseHopper(hopperGraph HopperGraph) Hopper {
 		Market:       hopperGraph.Market,
 		Level:        ParseInt(hopperGraph.Level),
 		Adventure:    hopperGraph.Adventure,
+		Image:        hopperGraph.Image,
 		Listings:     listings,
 	}
 }
 
-func parseListing(listingGraph ListingGraph) Listing {
-	return Listing{
+func parseListing(listingGraph ListingGraph) models.Listing {
+	return models.Listing{
 		Enabled: listingGraph.Enabled,
 		Sold:    listingGraph.Sold,
 		Price:   ParseBigFloat(listingGraph.Price),
@@ -128,8 +112,9 @@ func parseListing(listingGraph ListingGraph) Listing {
 // ----------------------------------------
 // Query functions
 // ----------------------------------------
-func (client *HoppersGraphClient) FetchAllHoppers() ([]Hopper, error) {
-	hoppers := make([]Hopper, 0)
+
+func (client *HoppersGraphClient) FetchAllHoppers() ([]models.Hopper, error) {
+	hoppers := make([]models.Hopper, 0)
 
 	for i := 0; i <= constants.HOPPERS_TOTAL_SUPPLY; i += 1000 {
 		req := graphql.NewRequest(GET_HOPPERS_QUERY)
@@ -137,7 +122,7 @@ func (client *HoppersGraphClient) FetchAllHoppers() ([]Hopper, error) {
 
 		res := &HoppersResponse{}
 		if err := client.Graph.Run(context.Background(), req, res); err != nil {
-			return []Hopper{}, err
+			return []models.Hopper{}, err
 		}
 
 		for _, hopper := range res.HopperNFTs {
