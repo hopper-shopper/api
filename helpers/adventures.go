@@ -1,38 +1,12 @@
 package helpers
 
 import (
-	"github.com/steschwa/hopper-analytics-api/constants"
-	"github.com/steschwa/hopper-analytics-api/models"
+	"github.com/steschwa/hopper-analytics-collector/constants"
+	"github.com/steschwa/hopper-analytics-collector/helpers"
+	"github.com/steschwa/hopper-analytics-collector/models"
 )
 
-func CanEnter(adventure constants.Adventure, hopper models.Hopper) bool {
-	switch adventure {
-	case constants.AdventurePond, constants.AdventureStream, constants.AdventureSwamp:
-		return true
-	case constants.AdventureRiver:
-		return CanEnterRiver(hopper)
-	case constants.AdventureForest:
-		return CanEnterForest(hopper)
-	case constants.AdventureGreatLake:
-		return CanEnterGreatLake(hopper)
-	default:
-		return false
-	}
-}
-
-func CanEnterRiver(hopper models.Hopper) bool {
-	return hopper.Strength >= 5 && hopper.Intelligence >= 5
-}
-
-func CanEnterForest(hopper models.Hopper) bool {
-	return hopper.Agility >= 5 && hopper.Vitality >= 5 && hopper.Intelligence >= 5
-}
-
-func CanEnterGreatLake(hopper models.Hopper) bool {
-	return hopper.Strength >= 5 && hopper.Agility >= 5 && hopper.Vitality >= 5 && hopper.Intelligence >= 5
-}
-
-func getAttributes(adventure constants.Adventure, hopper models.Hopper) []int {
+func getAttributes(adventure constants.Adventure, hopper models.HopperDocument) []int {
 	switch adventure {
 	case constants.AdventurePond:
 		return []int{hopper.Strength}
@@ -51,7 +25,11 @@ func getAttributes(adventure constants.Adventure, hopper models.Hopper) []int {
 	}
 }
 
-func CalculateBaseShare(adventure constants.Adventure, hopper models.Hopper) int {
+func CalculateBaseShare(adventure constants.Adventure, hopper models.HopperDocument) int {
+	if !helpers.CanEnter(adventure, helpers.HopperDocumentToHopper(hopper)) {
+		return 0
+	}
+
 	attributes := getAttributes(adventure, hopper)
 
 	attributesTotal := 1

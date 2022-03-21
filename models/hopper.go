@@ -3,21 +3,11 @@ package models
 import (
 	"math/big"
 	"strings"
+
+	"github.com/steschwa/hopper-analytics-collector/models"
 )
 
 type (
-	Hopper struct {
-		TokenId      string
-		Strength     int
-		Agility      int
-		Vitality     int
-		Intelligence int
-		Market       bool
-		Level        int
-		Adventure    bool
-		Image        string
-		Listings     []Listing
-	}
 	Listing struct {
 		Enabled bool
 		Sold    bool
@@ -25,7 +15,7 @@ type (
 	}
 
 	HopperOnMarket struct {
-		Hopper
+		models.HopperDocument
 		Price  float64
 		Rating int
 	}
