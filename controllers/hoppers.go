@@ -3,10 +3,8 @@ package controllers
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,8 +13,8 @@ import (
 
 func NewHoppersController(mongoClient *mongo.Client) RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		adventure := constants.AdventureFromString(ctx.Query("adventure", constants.AdventurePond.String()))
-		market := marketFilterFromString(ctx.Query("market", AnyMarket.String()))
+		adventure := AdventureFilterFromString(ctx.Query("adventure", AnyAdventure.String()))
+		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
 
 		hoppersCollection := &db.HoppersCollection{
 			Connection: mongoClient,
@@ -24,7 +22,10 @@ func NewHoppersController(mongoClient *mongo.Client) RouteHandler {
 
 		cursor, err := hoppersCollection.GetCollection().Find(
 			context.Background(),
-			getHoppersFilter(adventure, market),
+			getHoppersFilter(HoppersFilter{
+				Adventure: adventure,
+				Market:    market,
+			}),
 		)
 		if err != nil {
 			log.Println(err)
@@ -51,27 +52,21 @@ func NewHoppersController(mongoClient *mongo.Client) RouteHandler {
 // Mongo filters
 // ----------------------------------------
 
-func getHoppersFilter(adventure constants.Adventure, market MarketFilter) bson.D {
+func getHoppersFilter(hoppersFilter HoppersFilter) bson.D {
 	filter := bson.D{}
 
-	filter = append(filter, getAdventureFilter(adventure))
-	filter = append(filter, getMarketFilter(market))
+	filter = append(filter, getAdventureFilter(hoppersFilter.Adventure))
+	filter = append(filter, getMarketFilter(hoppersFilter.Market))
 
 	return filter
 }
-func getAdventureFilter(adventure constants.Adventure) bson.E {
-	switch adventure {
-	case constants.AdventurePond:
-		return bson.E{Key: "canEnterPond", Value: true}
-	case constants.AdventureStream:
-		return bson.E{Key: "canEnterStream", Value: true}
-	case constants.AdventureSwamp:
-		return bson.E{Key: "canEnterSwamp", Value: true}
-	case constants.AdventureRiver:
+func getAdventureFilter(adventureFilter AdventureFilter) bson.E {
+	switch adventureFilter {
+	case RiverAdventure:
 		return bson.E{Key: "canEnterRiver", Value: true}
-	case constants.AdventureForest:
+	case ForestAdventure:
 		return bson.E{Key: "canEnterForest", Value: true}
-	case constants.AdventureGreatLake:
+	case GreatLakeAdventure:
 		return bson.E{Key: "canEnterGreatLake", Value: true}
 	default:
 		return bson.E{}
@@ -106,7 +101,7 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 			"image":        hopper.Image,
 			"adventure":    hopper.Adventure,
 			"market":       hopper.Market,
-			"ratings": fiber.Map{
+			"rating": fiber.Map{
 				"pond":      hopper.RatingPond,
 				"stream":    hopper.RatingStream,
 				"swamp":     hopper.RatingSwamp,
@@ -118,42 +113,4 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 	}
 
 	return data
-}
-
-// ----------------------------------------
-// Filters
-// ----------------------------------------
-
-type (
-	MarketFilter int
-)
-
-const (
-	OnMarket MarketFilter = iota
-	OffMarket
-	AnyMarket
-)
-
-func marketFilterFromString(market string) MarketFilter {
-	lowerCased := strings.ToLower(market)
-
-	switch lowerCased {
-	case "1", "true", "on", "yes":
-		return OnMarket
-	case "0", "false", "off", "no":
-		return OffMarket
-	default:
-		return AnyMarket
-	}
-}
-
-func (marketFilter MarketFilter) String() string {
-	switch marketFilter {
-	case OnMarket:
-		return "yes"
-	case OffMarket:
-		return "no"
-	default:
-		return "any"
-	}
 }
