@@ -75,9 +75,9 @@ func getAdventureFilter(adventureFilter AdventureFilter) bson.E {
 func getMarketFilter(marketFilter MarketFilter) bson.E {
 	switch marketFilter {
 	case OnMarket:
-		return bson.E{Key: "market", Value: true}
+		return bson.E{Key: "listingActive", Value: true}
 	case OffMarket:
-		return bson.E{Key: "market", Value: false}
+		return bson.E{Key: "listingActive", Value: false}
 	default:
 		return bson.E{}
 	}
@@ -100,7 +100,6 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 			"level":        hopper.Level,
 			"image":        hopper.Image,
 			"adventure":    hopper.Adventure,
-			"market":       hopper.Market,
 			"rating": fiber.Map{
 				"pond":      hopper.RatingPond,
 				"stream":    hopper.RatingStream,
@@ -108,6 +107,10 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 				"river":     hopper.RatingRiver,
 				"forest":    hopper.RatingForest,
 				"greatLake": hopper.RatingGreatLake,
+			},
+			"listing": fiber.Map{
+				"active": hopper.ListingActive,
+				"price":  hopper.ListingPrice,
 			},
 		}
 	}
