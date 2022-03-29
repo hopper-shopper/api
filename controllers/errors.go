@@ -8,7 +8,7 @@ func CreateServerError(ctx *fiber.Ctx) error {
 	})
 }
 
-func CreateInvalidQueryError(ctx *fiber.Ctx) error {
+func CreateBadRequestError(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 		"message": "Bad request",
 	})

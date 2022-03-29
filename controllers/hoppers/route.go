@@ -1,17 +1,18 @@
-package controllers
+package hoppers
 
 import (
 	"context"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewHoppersController(mongoClient *mongo.Client) RouteHandler {
+func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := AdventureFilterFromString(ctx.Query("adventure", AnyAdventure.String()))
 		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
@@ -29,13 +30,13 @@ func NewHoppersController(mongoClient *mongo.Client) RouteHandler {
 		)
 		if err != nil {
 			log.Println(err)
-			return CreateServerError(ctx)
+			return controllers.CreateServerError(ctx)
 		}
 
 		hoppers := []models.HopperDocument{}
 		if err = cursor.All(context.Background(), &hoppers); err != nil {
 			log.Println(err)
-			return CreateServerError(ctx)
+			return controllers.CreateServerError(ctx)
 		}
 
 		return ctx.JSON(fiber.Map{
@@ -84,7 +85,7 @@ func getMarketFilter(marketFilter MarketFilter) bson.E {
 }
 
 // ----------------------------------------
-// Formatters
+// Response formatters
 // ----------------------------------------
 
 func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
@@ -107,6 +108,14 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 				"river":     hopper.RatingRiver,
 				"forest":    hopper.RatingForest,
 				"greatLake": hopper.RatingGreatLake,
+			},
+			"baseFly": fiber.Map{
+				"pond":      hopper.BaseFlyPond,
+				"stream":    hopper.BaseFlyStream,
+				"swamp":     hopper.BaseFlySwamp,
+				"river":     hopper.BaseFlyRiver,
+				"forest":    hopper.BaseFlyForest,
+				"greatLake": hopper.BaseFlyGreatLake,
 			},
 			"listing": fiber.Map{
 				"active": hopper.ListingActive,

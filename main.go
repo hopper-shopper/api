@@ -8,7 +8,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/steschwa/hopper-analytics-api/controllers"
+	"github.com/steschwa/hopper-analytics-api/controllers/compare"
+	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
@@ -32,7 +33,8 @@ func main() {
 	server := fiber.New()
 	server.Use(cors.New())
 
-	server.Get("/hoppers", controllers.NewHoppersController(mongoClient))
+	server.Get("/hoppers", hoppers.NewRouteHandler(mongoClient))
+	server.Get("/hoppers/compare", compare.NewRouteHandler(mongoClient))
 
 	server.Listen(getServerAddress())
 }
