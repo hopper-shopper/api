@@ -1,0 +1,10 @@
+{
+    "schemaVersion": 2,
+    "dockerfileLines": [
+        "FROM alpine",
+        "RUN mkdir /usr/hopper-analytics-api",
+        "WORKDIR /usr/hopper-analytics-api",
+        "ADD ./bin/hopper-analytics-api.alpine .",
+        "CMD [\"./hopper-analytics-api.alpine\"]"
+    ]
+}
