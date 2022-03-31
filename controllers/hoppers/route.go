@@ -15,6 +15,7 @@ import (
 func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := AdventureFilterFromString(ctx.Query("adventure", AnyAdventure.String()))
+		permit := PermitFilterFromString(ctx.Query("permit", AnyPermit.String()))
 		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
 
 		hoppersCollection := &db.HoppersCollection{
@@ -26,6 +27,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			getHoppersFilter(HoppersFilter{
 				Adventure: adventure,
 				Market:    market,
+				Permit:    permit,
 			}),
 		)
 		if err != nil {
@@ -42,6 +44,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{
 				"adventure": adventure.String(),
+				"permit":    permit.String(),
 				"market":    market.String(),
 			},
 			"data": formatHoppers(hoppers),
@@ -57,17 +60,36 @@ func getHoppersFilter(hoppersFilter HoppersFilter) bson.D {
 	filter := bson.D{}
 
 	filter = append(filter, getAdventureFilter(hoppersFilter.Adventure))
+	filter = append(filter, getPermitFilter(hoppersFilter.Permit))
 	filter = append(filter, getMarketFilter(hoppersFilter.Market))
 
 	return filter
 }
 func getAdventureFilter(adventureFilter AdventureFilter) bson.E {
 	switch adventureFilter {
+	case PondAdventure:
+		return bson.E{Key: "adventure", Value: "pond"}
+	case StreamAdventure:
+		return bson.E{Key: "adventure", Value: "stream"}
+	case SwampAdventure:
+		return bson.E{Key: "adventure", Value: "swamp"}
 	case RiverAdventure:
-		return bson.E{Key: "canEnterRiver", Value: true}
+		return bson.E{Key: "adventure", Value: "river"}
 	case ForestAdventure:
-		return bson.E{Key: "canEnterForest", Value: true}
+		return bson.E{Key: "adventure", Value: "forest"}
 	case GreatLakeAdventure:
+		return bson.E{Key: "adventure", Value: "great-lake"}
+	default:
+		return bson.E{}
+	}
+}
+func getPermitFilter(permitFilter PermitFilter) bson.E {
+	switch permitFilter {
+	case RiverPermit:
+		return bson.E{Key: "canEnterRiver", Value: true}
+	case ForestPermit:
+		return bson.E{Key: "canEnterForest", Value: true}
+	case GreatLakePermit:
 		return bson.E{Key: "canEnterGreatLake", Value: true}
 	default:
 		return bson.E{}
@@ -100,6 +122,7 @@ func formatHoppers(hoppers []models.HopperDocument) []fiber.Map {
 			"fertility":    hopper.Fertility,
 			"level":        hopper.Level,
 			"image":        hopper.Image,
+			"inAdventure":  hopper.InAdventure,
 			"adventure":    hopper.Adventure,
 			"rating": fiber.Map{
 				"pond":      hopper.RatingPond,
