@@ -10,16 +10,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func LoadAvaxUsdPrice(mongoClient *mongo.Client) float64 {
+type (
+	PriceLoader struct {
+		MongoClient *mongo.Client
+	}
+)
+
+func NewPriceLoader(mongoClient *mongo.Client) *PriceLoader {
+	return &PriceLoader{
+		MongoClient: mongoClient,
+	}
+}
+
+func (loader *PriceLoader) loadPrice(filter bson.D) float64 {
 	pricesCollection := &db.PricesCollection{
-		Connection: mongoClient,
+		Connection: loader.MongoClient,
 	}
 	result := pricesCollection.GetCollection().FindOne(
 		context.Background(),
-		bson.D{
-			{Key: "coin", Value: constants.COINGECKO_AVAX},
-			{Key: "currency", Value: constants.COINGECKO_USD},
-		},
+		filter,
 	)
 
 	priceDocument := models.PriceDocument{}
@@ -30,22 +39,28 @@ func LoadAvaxUsdPrice(mongoClient *mongo.Client) float64 {
 	return priceDocument.Price
 }
 
-func LoadFlyUsdPrice(mongoClient *mongo.Client) float64 {
-	pricesCollection := &db.PricesCollection{
-		Connection: mongoClient,
-	}
-	result := pricesCollection.GetCollection().FindOne(
-		context.Background(),
-		bson.D{
-			{Key: "coin", Value: constants.COINGECKO_FLY},
-			{Key: "currency", Value: constants.COINGECKO_USD},
-		},
-	)
+func (loader *PriceLoader) LoadAvaxUsdPrice() float64 {
+	return loader.loadPrice(bson.D{
+		{Key: "coin", Value: constants.COINGECKO_AVAX},
+		{Key: "currency", Value: constants.COINGECKO_USD},
+	})
+}
+func (loader *PriceLoader) LoadAvaxEurPrice() float64 {
+	return loader.loadPrice(bson.D{
+		{Key: "coin", Value: constants.COINGECKO_AVAX},
+		{Key: "currency", Value: constants.COINGECKO_EUR},
+	})
+}
 
-	priceDocument := models.PriceDocument{}
-	if err := result.Decode(&priceDocument); err != nil {
-		return 0
-	}
-
-	return priceDocument.Price
+func (loader *PriceLoader) LoadFlyUsdPrice() float64 {
+	return loader.loadPrice(bson.D{
+		{Key: "coin", Value: constants.COINGECKO_FLY},
+		{Key: "currency", Value: constants.COINGECKO_USD},
+	})
+}
+func (loader *PriceLoader) LoadFlyEurPrice() float64 {
+	return loader.loadPrice(bson.D{
+		{Key: "coin", Value: constants.COINGECKO_FLY},
+		{Key: "currency", Value: constants.COINGECKO_EUR},
+	})
 }
