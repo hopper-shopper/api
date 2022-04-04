@@ -1,6 +1,10 @@
 package hoppers
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/go-playground/validator/v10"
+)
 
 type (
 	AdventureFilter int
@@ -8,9 +12,10 @@ type (
 	PermitFilter    int
 
 	HoppersFilter struct {
-		Adventure AdventureFilter
-		Market    MarketFilter
-		Permit    PermitFilter
+		Adventure AdventureFilter `validate:"oneof=0 1 2 3 4 5 6"`
+		Market    MarketFilter    `validate:"oneof=0 1 2"`
+		Permit    PermitFilter    `validate:"oneof=0 1 2 3"`
+		TokenIds  []string        `validate:"omitempty,min=0,dive,numeric,min=1,max=4"`
 	}
 )
 
@@ -22,11 +27,15 @@ const (
 	RiverAdventure
 	ForestAdventure
 	GreatLakeAdventure
+)
 
+const (
 	AnyMarket MarketFilter = iota
 	OnMarket
 	OffMarket
+)
 
+const (
 	AnyPermit PermitFilter = iota
 	RiverPermit
 	ForestPermit
@@ -122,4 +131,24 @@ func (permitFilter PermitFilter) String() string {
 	default:
 		return "any"
 	}
+}
+
+func TokenIdsFilterFromString(text string) []string {
+	splittableText := strings.Replace(text, " ", "", -1)
+	if len(splittableText) == 0 {
+		return []string{}
+	}
+
+	tokenIds := strings.Split(splittableText, ",")
+
+	for i, tokenId := range tokenIds {
+		tokenIds[i] = strings.Replace(tokenId, " ", "", -1)
+	}
+
+	return tokenIds
+}
+
+func ValidateFilter(filter HoppersFilter) error {
+	validate := validator.New()
+	return validate.Struct(filter)
 }

@@ -13,3 +13,9 @@ func CreateBadRequestError(ctx *fiber.Ctx) error {
 		"message": "Bad request",
 	})
 }
+
+func CreateValidationError(ctx *fiber.Ctx) error {
+	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		"message": "Invalid request params",
+	})
+}

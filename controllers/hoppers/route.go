@@ -18,6 +18,20 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		adventure := AdventureFilterFromString(ctx.Query("adventure", AnyAdventure.String()))
 		permit := PermitFilterFromString(ctx.Query("permit", AnyPermit.String()))
 		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
+		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
+
+		hoppersFilter := HoppersFilter{
+			Adventure: adventure,
+			Market:    market,
+			Permit:    permit,
+			TokenIds:  tokenIds,
+		}
+
+		err := ValidateFilter(hoppersFilter)
+		if err != nil {
+			log.Println(err)
+			return controllers.CreateValidationError(ctx)
+		}
 
 		hoppersCollection := &db.HoppersCollection{
 			Connection: mongoClient,
@@ -25,11 +39,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 
 		cursor, err := hoppersCollection.GetCollection().Find(
 			context.Background(),
-			getHoppersFilter(HoppersFilter{
-				Adventure: adventure,
-				Market:    market,
-				Permit:    permit,
-			}),
+			getMongoFilter(hoppersFilter),
 		)
 		if err != nil {
 			log.Println(err)
@@ -49,6 +59,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 				"adventure": adventure.String(),
 				"permit":    permit.String(),
 				"market":    market.String(),
+				"tokenIds":  tokenIds,
 			},
 			"data": formatter.FormatAll(hoppers),
 		})
@@ -59,12 +70,13 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 // Mongo filters
 // ----------------------------------------
 
-func getHoppersFilter(hoppersFilter HoppersFilter) bson.D {
+func getMongoFilter(hoppersFilter HoppersFilter) bson.D {
 	filter := bson.D{}
 
 	filter = append(filter, getAdventureFilter(hoppersFilter.Adventure))
 	filter = append(filter, getPermitFilter(hoppersFilter.Permit))
 	filter = append(filter, getMarketFilter(hoppersFilter.Market))
+	filter = append(filter, getTokenIdsFilter(hoppersFilter.TokenIds))
 
 	return filter
 }
@@ -106,5 +118,17 @@ func getMarketFilter(marketFilter MarketFilter) bson.E {
 		return bson.E{Key: "listingActive", Value: false}
 	default:
 		return bson.E{}
+	}
+}
+func getTokenIdsFilter(tokenIds []string) bson.E {
+	if len(tokenIds) == 0 {
+		return bson.E{}
+	}
+
+	return bson.E{
+		Key: "tokenId",
+		Value: bson.M{
+			"$in": tokenIds,
+		},
 	}
 }
