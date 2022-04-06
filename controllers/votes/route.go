@@ -11,6 +11,7 @@ import (
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
@@ -21,11 +22,19 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			Connection: mongoClient,
 		}
 
+		var votesLimit int64 = 6
 		cursor, err := votesCollection.GetCollection().Find(
 			context.Background(),
 			getVotesFilter(VotesFilter{
 				Adventure: adventure,
 			}),
+			&options.FindOptions{
+				Sort: bson.D{{
+					Key:   "updated",
+					Value: -1,
+				}},
+				Limit: &votesLimit,
+			},
 		)
 		if err != nil {
 			log.Println(err)
