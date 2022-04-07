@@ -3,6 +3,7 @@ package hoppers
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
@@ -19,12 +20,14 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		permit := PermitFilterFromString(ctx.Query("permit", AnyPermit.String()))
 		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
+		owner := ctx.Query("owner")
 
 		hoppersFilter := HoppersFilter{
 			Adventure: adventure,
 			Market:    market,
 			Permit:    permit,
 			TokenIds:  tokenIds,
+			Owner:     owner,
 		}
 
 		err := ValidateFilter(hoppersFilter)
@@ -77,6 +80,7 @@ func getMongoFilter(hoppersFilter HoppersFilter) bson.D {
 	filter = append(filter, getPermitFilter(hoppersFilter.Permit))
 	filter = append(filter, getMarketFilter(hoppersFilter.Market))
 	filter = append(filter, getTokenIdsFilter(hoppersFilter.TokenIds))
+	filter = append(filter, getOwnerFilter(hoppersFilter.Owner))
 
 	return filter
 }
@@ -130,5 +134,15 @@ func getTokenIdsFilter(tokenIds []string) bson.E {
 		Value: bson.M{
 			"$in": tokenIds,
 		},
+	}
+}
+func getOwnerFilter(owner string) bson.E {
+	if owner == "" {
+		return bson.E{}
+	}
+
+	return bson.E{
+		Key:   "owner",
+		Value: strings.ToLower(owner),
 	}
 }

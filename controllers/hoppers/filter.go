@@ -16,6 +16,7 @@ type (
 		Market    MarketFilter    `validate:"oneof=0 1 2"`
 		Permit    PermitFilter    `validate:"oneof=0 1 2 3"`
 		TokenIds  []string        `validate:"omitempty,min=0,dive,numeric,min=1,max=4"`
+		Owner     string          `validate:"omitempty,eth_addr"`
 	}
 )
 
