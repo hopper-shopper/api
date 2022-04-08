@@ -1,4 +1,4 @@
-package votes
+package baseshares
 
 import (
 	"context"
@@ -18,23 +18,23 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := hoppers.AdventureFilterFromString(ctx.Query("adventure", hoppers.AnyAdventure.String()))
 
-		votesCollection := &db.VotesCollection{
+		baseSharesCollection := &db.BaseSharesCollection{
 			Connection: mongoClient,
 		}
 
-		var votesLimit int64 = 1
+		var baseSharesLimit int64 = 1
 		if adventure == hoppers.AnyAdventure {
-			votesLimit = 6
+			baseSharesLimit = 6
 		}
-		cursor, err := votesCollection.GetCollection().Find(
+		cursor, err := baseSharesCollection.GetCollection().Find(
 			context.Background(),
-			getVotesFilter(adventure),
+			getBaseSharesFilter(adventure),
 			&options.FindOptions{
 				Sort: bson.D{{
 					Key:   "updated",
 					Value: -1,
 				}},
-				Limit: &votesLimit,
+				Limit: &baseSharesLimit,
 			},
 		)
 		if err != nil {
@@ -42,8 +42,8 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			return controllers.CreateServerError(ctx)
 		}
 
-		votes := []models.VoteDocument{}
-		if err = cursor.All(context.Background(), &votes); err != nil {
+		baseShares := []models.BaseSharesDocument{}
+		if err = cursor.All(context.Background(), &baseShares); err != nil {
 			log.Println(err)
 			return controllers.CreateServerError(ctx)
 		}
@@ -52,7 +52,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			"filter": fiber.Map{
 				"adventure": adventure.String(),
 			},
-			"data": formatVotes(votes),
+			"data": formatBaseShares(baseShares),
 		})
 	}
 }
@@ -61,7 +61,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 // Mongo filters
 // ----------------------------------------
 
-func getVotesFilter(adventure hoppers.AdventureFilter) bson.D {
+func getBaseSharesFilter(adventure hoppers.AdventureFilter) bson.D {
 	filter := bson.D{}
 
 	filter = append(filter, getAdventureFilter(adventure))
@@ -91,13 +91,12 @@ func getAdventureFilter(adventureFilter hoppers.AdventureFilter) bson.E {
 // Response formatters
 // ----------------------------------------
 
-func formatVotes(votes []models.VoteDocument) []fiber.Map {
-	data := make([]fiber.Map, len(votes))
-	for i, vote := range votes {
+func formatBaseShares(baseShares []models.BaseSharesDocument) []fiber.Map {
+	data := make([]fiber.Map, len(baseShares))
+	for i, baseShare := range baseShares {
 		data[i] = fiber.Map{
-			"adventure": vote.Adventure,
-			"votes":     vote.Votes,
-			"share":     vote.VotesShare,
+			"adventure":  baseShare.Adventure,
+			"baseShares": baseShare.TotalBaseShares,
 		}
 	}
 

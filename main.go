@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	baseshares "github.com/steschwa/hopper-analytics-api/controllers/base-shares"
 	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
 	"github.com/steschwa/hopper-analytics-api/controllers/markets"
 	"github.com/steschwa/hopper-analytics-api/controllers/prices"
@@ -37,6 +38,7 @@ func main() {
 
 	server.Get("/hoppers", hoppers.NewRouteHandler(mongoClient))
 	server.Get("/votes", votes.NewRouteHandler(mongoClient))
+	server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
 
