@@ -90,6 +90,10 @@ func getSoldFilter(sold SoldFilter) bson.E {
 	}
 }
 
+// ----------------------------------------
+// Response formatters
+// ----------------------------------------
+
 func formatListings(listings []models.ListingDocument) []fiber.Map {
 	data := make([]fiber.Map, len(listings))
 	for i, listing := range listings {

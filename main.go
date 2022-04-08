@@ -12,6 +12,7 @@ import (
 	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
 	"github.com/steschwa/hopper-analytics-api/controllers/markets"
 	"github.com/steschwa/hopper-analytics-api/controllers/prices"
+	"github.com/steschwa/hopper-analytics-api/controllers/transfers"
 	"github.com/steschwa/hopper-analytics-api/controllers/votes"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
@@ -41,6 +42,7 @@ func main() {
 	server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
+	server.Get("/transfers", transfers.NewRouteHandler())
 
 	server.Listen(getServerAddress())
 }
