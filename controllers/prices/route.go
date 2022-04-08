@@ -15,16 +15,26 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		avaxEur := loader.LoadAvaxEurPrice()
 		flyUsd := loader.LoadFlyUsdPrice()
 		flyEur := loader.LoadFlyEurPrice()
+		var avaxFly = 0.0
+		if flyUsd != 0 {
+			avaxFly = avaxUsd / flyUsd
+		}
+		var flyAvax = 0.0
+		if avaxUsd != 0 {
+			flyAvax = flyUsd / avaxUsd
+		}
 
 		return ctx.JSON(fiber.Map{
 			"data": fiber.Map{
 				"AVAX": fiber.Map{
 					"EUR": avaxEur,
 					"USD": avaxUsd,
+					"FLY": avaxFly,
 				},
 				"FLY": fiber.Map{
-					"EUR": flyEur,
-					"USD": flyUsd,
+					"EUR":  flyEur,
+					"USD":  flyUsd,
+					"AVAX": flyAvax,
 				},
 			},
 		})
