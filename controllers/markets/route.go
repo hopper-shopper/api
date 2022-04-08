@@ -15,9 +15,11 @@ import (
 func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
+		sold := SoldFilterFromString(ctx.Query("sold", AnySold.String()))
 
 		marketsFilter := MarketsFilter{
 			TokenIds: tokenIds,
+			Sold:     sold,
 		}
 
 		err := ValidateFilter(marketsFilter)
@@ -58,24 +60,34 @@ func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHa
 // ----------------------------------------
 
 func getListingsFilter(marketFilter MarketsFilter) bson.D {
-	if len(marketFilter.TokenIds) == 0 {
-		return bson.D{}
-	}
-
 	filter := bson.D{}
 
-	filter = append(filter, bson.E{
-		Key: "hopperId",
-		Value: bson.M{
-			"$in": marketFilter.TokenIds,
-		},
-	})
-	filter = append(filter, bson.E{
-		Key:   "sold",
-		Value: true,
-	})
+	filter = append(filter, getTokenIdsFilter(marketFilter.TokenIds))
+	filter = append(filter, getSoldFilter(marketFilter.Sold))
 
 	return filter
+}
+func getTokenIdsFilter(tokenIds []string) bson.E {
+	if len(tokenIds) == 0 {
+		return bson.E{}
+	}
+
+	return bson.E{
+		Key: "hopperId",
+		Value: bson.M{
+			"$in": tokenIds,
+		},
+	}
+}
+func getSoldFilter(sold SoldFilter) bson.E {
+	switch sold {
+	case AlreadySold:
+		return bson.E{Key: "sold", Value: true}
+	case NotSold:
+		return bson.E{Key: "sold", Value: false}
+	default:
+		return bson.E{}
+	}
 }
 
 func formatListings(listings []models.ListingDocument) []fiber.Map {
@@ -83,6 +95,7 @@ func formatListings(listings []models.ListingDocument) []fiber.Map {
 	for i, listing := range listings {
 		data[i] = fiber.Map{
 			"sold":      listing.Sold,
+			"enabled":   listing.Enabled,
 			"price":     listing.Price,
 			"buyer":     listing.Buyer,
 			"timestamp": listing.Timestamp,

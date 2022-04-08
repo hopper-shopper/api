@@ -86,9 +86,9 @@ func MarketFilterFromString(market string) MarketFilter {
 	lowerCased := strings.ToLower(market)
 
 	switch lowerCased {
-	case "1", "true", "on", "yes":
+	case "1", "true", "yes":
 		return OnMarket
-	case "0", "false", "off", "no":
+	case "0", "false", "no":
 		return OffMarket
 	default:
 		return AnyMarket
