@@ -39,7 +39,6 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		hoppersCollection := &db.HoppersCollection{
 			Connection: mongoClient,
 		}
-
 		cursor, err := hoppersCollection.GetCollection().Find(
 			context.Background(),
 			getMongoFilter(hoppersFilter),
