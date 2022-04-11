@@ -13,7 +13,9 @@ import (
 	"github.com/steschwa/hopper-analytics-api/controllers/markets"
 	"github.com/steschwa/hopper-analytics-api/controllers/prices"
 	"github.com/steschwa/hopper-analytics-api/controllers/transfers"
+	"github.com/steschwa/hopper-analytics-api/controllers/user"
 	"github.com/steschwa/hopper-analytics-api/controllers/votes"
+	"github.com/steschwa/hopper-analytics-collector/contracts"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
@@ -34,6 +36,11 @@ func main() {
 	}
 	defer mongoClient.Disconnect(context.Background())
 
+	onChainClient, err := contracts.NewOnChainClient()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	server := fiber.New()
 	server.Use(cors.New())
 
@@ -43,6 +50,7 @@ func main() {
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
 	server.Get("/transfers", transfers.NewRouteHandler())
+	server.Get("/user", user.NewRouteHandler(onChainClient))
 
 	server.Listen(getServerAddress())
 }
