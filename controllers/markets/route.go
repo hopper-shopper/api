@@ -98,10 +98,12 @@ func formatListings(listings []models.ListingDocument) []fiber.Map {
 	data := make([]fiber.Map, len(listings))
 	for i, listing := range listings {
 		data[i] = fiber.Map{
+			"id":        listing.Id,
 			"sold":      listing.Sold,
 			"enabled":   listing.Enabled,
 			"price":     listing.Price,
 			"buyer":     listing.Buyer,
+			"seller":    listing.Seller,
 			"timestamp": listing.Timestamp,
 			"tokenId":   listing.HopperId,
 		}
