@@ -2,6 +2,7 @@ package user
 
 import (
 	"log"
+	"math"
 	"math/big"
 
 	"github.com/gofiber/fiber/v2"
@@ -71,8 +72,10 @@ func formatUserAdventureFlyGeneration(flyGeneration UserAdventureFlyGeneration) 
 	formattedCap, _ := utils.ToDecimal(flyGeneration.Cap.String(), 30).Float64()
 	formattedGenerated, _ := utils.ToDecimal(flyGeneration.Current.String(), 18).Float64()
 
+	clampedCap := math.Max(0, formattedCap)
+
 	return fiber.Map{
-		"cap":     formattedCap,
-		"current": formattedGenerated,
+		"cap":     clampedCap,
+		"current": utils.Clamp(0, clampedCap, formattedGenerated),
 	}
 }
