@@ -50,7 +50,8 @@ func main() {
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
 	server.Get("/transfers", transfers.NewRouteHandler())
-	server.Get("/user", user.NewRouteHandler(onChainClient))
+	server.Get("/user/cap", user.NewUserCapRouteHandler(onChainClient))
+	server.Get("/user/earnings", user.NewUserEarnings(onChainClient, mongoClient))
 
 	server.Listen(getServerAddress())
 }

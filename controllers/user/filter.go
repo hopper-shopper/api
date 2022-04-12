@@ -6,13 +6,18 @@ import (
 )
 
 type (
-	UserFilter struct {
+	UserCapFilter struct {
+		User      string              `validate:"required,eth_addr"`
+		Adventure constants.Adventure `validate:"oneof=0 1 2 3 4 5"`
+	}
+
+	UserEarningsFilter struct {
 		User      string              `validate:"required,eth_addr"`
 		Adventure constants.Adventure `validate:"oneof=0 1 2 3 4 5"`
 	}
 )
 
-func ValidateFilter(filter UserFilter) error {
+func ValidateFilter(filter any) error {
 	validate := validator.New()
 	return validate.Struct(filter)
 }

@@ -97,7 +97,6 @@ func formatVotes(votes []models.VoteDocument) []fiber.Map {
 		data[i] = fiber.Map{
 			"adventure": vote.Adventure,
 			"votes":     vote.Votes,
-			"share":     vote.VotesShare,
 		}
 	}
 
