@@ -83,8 +83,8 @@ func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.
 				"user": user,
 			},
 			"data": fiber.Map{
-				"base":    baseFly,
-				"boosted": boostedFly,
+				"base":  baseFly,
+				"boost": boostedFly,
 			},
 		})
 	}
