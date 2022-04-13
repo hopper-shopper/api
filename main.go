@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	baseshares "github.com/steschwa/hopper-analytics-api/controllers/base-shares"
@@ -29,6 +31,9 @@ func main() {
 	if mongoUri == "" {
 		log.Fatalf("Missing environment variable %s\n", MONGO_URI)
 	}
+
+	initSentry()
+	defer sentry.Flush(2 * time.Second)
 
 	mongoClient, err := db.Connect(mongoUri)
 	if err != nil {
@@ -65,4 +70,15 @@ func getServerAddress() string {
 	}
 
 	return fmt.Sprintf(":%s", port)
+}
+
+func initSentry() {
+	if env := os.Getenv("ENV"); env == "production" {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn: "https://01da0a181e384b2f94fc5e93090bbeaf@o1202748.ingest.sentry.io/6328507",
+		})
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 }
