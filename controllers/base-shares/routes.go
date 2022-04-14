@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
+	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -38,12 +40,14 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			},
 		)
 		if err != nil {
+			sentry.CaptureException(err)
 			log.Println(err)
 			return controllers.CreateServerError(ctx)
 		}
 
 		baseShares := []models.BaseSharesDocument{}
 		if err = cursor.All(context.Background(), &baseShares); err != nil {
+			sentry.CaptureException(err)
 			log.Println(err)
 			return controllers.CreateServerError(ctx)
 		}
@@ -57,6 +61,36 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	}
 }
 
+func NewHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+	return func(ctx *fiber.Ctx) error {
+		adventure := constants.AdventureFromString(ctx.Query("adventure"))
+
+		filter := BaseShareByAdventureFilter{
+			Adventure: adventure,
+		}
+		err := ValidateFilter(filter)
+		if err != nil {
+			log.Println(err)
+			return controllers.CreateValidationError(ctx)
+		}
+
+		historyLoader := NewBaseSharesHistoryLoader(mongoClient)
+		aggregates, err := historyLoader.Load(filter)
+		if err != nil {
+			sentry.CaptureException(err)
+			log.Println(err)
+			return controllers.CreateServerError(ctx)
+		}
+
+		return ctx.JSON(fiber.Map{
+			"filter": fiber.Map{
+				"adventure": adventure.String(),
+			},
+			"data": formatAggregates(aggregates),
+		})
+	}
+}
+
 // ----------------------------------------
 // Mongo filters
 // ----------------------------------------
@@ -64,11 +98,11 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 func getBaseSharesFilter(adventure hoppers.AdventureFilter) bson.D {
 	filter := bson.D{}
 
-	filter = append(filter, getAdventureFilter(adventure))
+	filter = append(filter, getHopperAdventureFilter(adventure))
 
 	return filter
 }
-func getAdventureFilter(adventureFilter hoppers.AdventureFilter) bson.E {
+func getHopperAdventureFilter(adventureFilter hoppers.AdventureFilter) bson.E {
 	switch adventureFilter {
 	case hoppers.PondAdventure:
 		return bson.E{Key: "adventure", Value: "pond"}
@@ -95,8 +129,22 @@ func formatBaseShares(baseShares []models.BaseSharesDocument) []fiber.Map {
 	data := make([]fiber.Map, len(baseShares))
 	for i, baseShare := range baseShares {
 		data[i] = fiber.Map{
+			"datetime":   baseShare.Updated,
 			"adventure":  baseShare.Adventure,
 			"baseShares": baseShare.TotalBaseShares,
+		}
+	}
+
+	return data
+}
+
+func formatAggregates(aggregates []AggregatedBaseShare) []fiber.Map {
+	data := make([]fiber.Map, len(aggregates))
+	for i, aggregate := range aggregates {
+		data[i] = fiber.Map{
+			"datetime":   aggregate.Datetime,
+			"adventure":  aggregate.Adventure,
+			"baseShares": aggregate.TotalBaseShares,
 		}
 	}
 

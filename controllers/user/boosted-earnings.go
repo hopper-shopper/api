@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/shopspring/decimal"
 	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/contracts"
@@ -76,6 +77,7 @@ func (calculator *UserBoostedFlyCalculator) calculateTotalVotes() (decimal.Decim
 		votesInAdventure, err := calculator.loadLatestTotalVotesByAdventure(adventure)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			continue
 		}
 

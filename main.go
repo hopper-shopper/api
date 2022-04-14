@@ -37,12 +37,14 @@ func main() {
 
 	mongoClient, err := db.Connect(mongoUri)
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatalln(err)
 	}
 	defer mongoClient.Disconnect(context.Background())
 
 	onChainClient, err := contracts.NewOnChainClient()
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatalln(err)
 	}
 
@@ -52,6 +54,7 @@ func main() {
 	server.Get("/hoppers", hoppers.NewRouteHandler(mongoClient))
 	server.Get("/votes", votes.NewRouteHandler(mongoClient))
 	server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
+	server.Get("/base-shares/history", baseshares.NewHistoryRouteHandler(mongoClient))
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
 	server.Get("/transfers", transfers.NewRouteHandler())
@@ -80,5 +83,6 @@ func initSentry() {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		log.Println("Using Sentry for error reporting")
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-api/formatters"
@@ -45,6 +46,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 

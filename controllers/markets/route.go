@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-collector/models"
@@ -37,6 +38,7 @@ func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHa
 		)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 

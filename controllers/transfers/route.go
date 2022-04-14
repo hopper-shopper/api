@@ -3,6 +3,7 @@ package transfers
 import (
 	"log"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-api/graph"
@@ -35,6 +36,7 @@ func NewRouteHandler() controllers.RouteHandler {
 
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 

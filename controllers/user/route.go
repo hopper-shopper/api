@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-api/utils"
@@ -36,6 +37,7 @@ func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient) controllers.
 		flyGeneration, err := userCapCalculator.CalculateFlyGeneration(adventure, user)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 
@@ -68,6 +70,7 @@ func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.
 		baseFly, err := baseFlyCalculator.CalculateBaseFly(adventure, user)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 
@@ -75,12 +78,14 @@ func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.
 		boostedFly, err := boostedFlyCalculator.CalculateBoostedFly(adventure, user)
 		if err != nil {
 			log.Println(err)
+			sentry.CaptureException(err)
 			return controllers.CreateServerError(ctx)
 		}
 
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{
-				"user": user,
+				"user":      user,
+				"adventure": adventure.String(),
 			},
 			"data": fiber.Map{
 				"base":  baseFly,

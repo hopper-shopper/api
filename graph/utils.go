@@ -4,11 +4,14 @@ import (
 	"math/big"
 	"strconv"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 func ParseUInt(value string) uint {
 	parsed, err := strconv.ParseUint(value, 10, 64)
 	if err != nil {
+		sentry.CaptureException(err)
 		return 0
 	}
 	return uint(parsed)

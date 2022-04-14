@@ -5,6 +5,6 @@
         "RUN mkdir /usr/hopper-analytics-api",
         "WORKDIR /usr/hopper-analytics-api",
         "ADD ./bin/hopper-analytics-api.alpine .",
-        "CMD [\"ENV=production ./hopper-analytics-api.alpine\"]"
+        "CMD [\"./hopper-analytics-api.alpine\"]"
     ]
 }
