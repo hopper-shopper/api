@@ -14,6 +14,7 @@ import (
 	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
 	"github.com/steschwa/hopper-analytics-api/controllers/markets"
 	"github.com/steschwa/hopper-analytics-api/controllers/prices"
+	"github.com/steschwa/hopper-analytics-api/controllers/supply"
 	"github.com/steschwa/hopper-analytics-api/controllers/transfers"
 	"github.com/steschwa/hopper-analytics-api/controllers/user"
 	"github.com/steschwa/hopper-analytics-api/controllers/votes"
@@ -60,6 +61,7 @@ func main() {
 	server.Get("/transfers", transfers.NewRouteHandler())
 	server.Get("/user/cap", user.NewUserCapRouteHandler(onChainClient))
 	server.Get("/user/earnings", user.NewUserEarnings(onChainClient, mongoClient))
+	server.Get("/supply", supply.NewRouteHandler(mongoClient))
 
 	server.Listen(getServerAddress())
 }
