@@ -2,12 +2,10 @@ package user
 
 import (
 	"log"
-	"math"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
-	"github.com/steschwa/hopper-analytics-api/utils"
 	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/contracts"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,7 +16,7 @@ import (
 // Response formatters
 // ----------------------------------------
 
-func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient) controllers.RouteHandler {
+func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		user := ctx.Query("user")
 		adventure := constants.AdventureFromString(ctx.Query("adventure"))
@@ -33,7 +31,7 @@ func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient) controllers.
 			return controllers.CreateValidationError(ctx)
 		}
 
-		userCapCalculator := NewUserFlyGenerationCalculator(onChainClient)
+		userCapCalculator := NewUserFlyGenerationCalculator(onChainClient, mongoClient)
 		flyGeneration, err := userCapCalculator.CalculateFlyGeneration(adventure, user)
 		if err != nil {
 			log.Println(err)
@@ -137,13 +135,9 @@ func getAdventureFilter(adventure constants.Adventure) bson.E {
 // ----------------------------------------
 
 func formatUserAdventureFlyGeneration(flyGeneration UserAdventureFlyGeneration) fiber.Map {
-	formattedCap, _ := utils.ToDecimal(flyGeneration.Cap.String(), 30).Float64()
-	formattedGenerated, _ := utils.ToDecimal(flyGeneration.Current.String(), 18).Float64()
-
-	clampedCap := math.Max(0, formattedCap)
-
 	return fiber.Map{
-		"cap":     clampedCap,
-		"current": utils.Clamp(0, clampedCap, formattedGenerated),
+		"cap":     flyGeneration.Cap,
+		"current": flyGeneration.Current,
+		"time":    flyGeneration.Time,
 	}
 }
