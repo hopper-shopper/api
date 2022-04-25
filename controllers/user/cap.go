@@ -71,7 +71,7 @@ func (calculator *UserFlyGenerationCalculator) CalculateFlyGeneration(adventure 
 	capLeft := clampedTotalCap - clampedCurrentCap
 
 	var timeBeforeCap uint = 0
-	if flyPerSecond > 0 {
+	if flyPerSecond > 0 && capLeft > 0 {
 		timeBeforeCap = uint(capLeft / flyPerSecond)
 	}
 
