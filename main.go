@@ -58,8 +58,6 @@ func main() {
 	server.Get("/market", markets.NewMarketHistoryByHopper(mongoClient))
 	server.Get("/transfers", transfers.NewHistoryRouteHandler())
 	server.Get("/user/cap", user.NewUserCapRouteHandler(onChainClient, mongoClient))
-	server.Get("/user/earnings/history", user.NewUserEarningsHistory())
-	server.Get("/user/earnings/all-time", user.NewUserEarningsAllTime())
 	server.Get("/user/earnings", user.NewUserEarnings(onChainClient, mongoClient))
 	server.Get("/supply", supply.NewRouteHandler(mongoClient))
 
