@@ -11,7 +11,7 @@ import (
 	"github.com/steschwa/hopper-analytics-api/utils"
 )
 
-func NewRouteHandler() controllers.RouteHandler {
+func NewHistoryRouteHandler() controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		transferDirection := TransferDirectionFromString(ctx.Query("direction", FromUser.String()))
 		user := ctx.Query("user")

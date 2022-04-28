@@ -1,19 +1,16 @@
 package markets
 
 import (
-	"context"
 	"log"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-collector/models"
-	db "github.com/steschwa/hopper-analytics-collector/mongo"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewMarketHistoryByHopper(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
 		sold := SoldFilterFromString(ctx.Query("sold", AnySold.String()))
@@ -29,22 +26,11 @@ func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHa
 			return controllers.CreateValidationError(ctx)
 		}
 
-		listingsCollection := &db.MarketsCollection{
-			Connection: mongoClient,
-		}
-		cursor, err := listingsCollection.GetCollection().Find(
-			context.Background(),
-			getListingsFilter(marketsFilter),
-		)
+		loader := NewMarketListingsLoader(mongoClient)
+		listings, err := loader.Load(marketsFilter)
 		if err != nil {
 			log.Println(err)
 			sentry.CaptureException(err)
-			return controllers.CreateServerError(ctx)
-		}
-
-		listings := []models.ListingDocument{}
-		if err = cursor.All(context.Background(), &listings); err != nil {
-			log.Println(err)
 			return controllers.CreateServerError(ctx)
 		}
 
@@ -54,41 +40,6 @@ func NewMarketHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHa
 			},
 			"data": formatListings(listings),
 		})
-	}
-}
-
-// ----------------------------------------
-// Mongo filters
-// ----------------------------------------
-
-func getListingsFilter(marketFilter MarketsFilter) bson.D {
-	filter := bson.D{}
-
-	filter = append(filter, getTokenIdsFilter(marketFilter.TokenIds))
-	filter = append(filter, getSoldFilter(marketFilter.Sold))
-
-	return filter
-}
-func getTokenIdsFilter(tokenIds []string) bson.E {
-	if len(tokenIds) == 0 {
-		return bson.E{}
-	}
-
-	return bson.E{
-		Key: "hopperId",
-		Value: bson.M{
-			"$in": tokenIds,
-		},
-	}
-}
-func getSoldFilter(sold SoldFilter) bson.E {
-	switch sold {
-	case AlreadySold:
-		return bson.E{Key: "sold", Value: true}
-	case NotSold:
-		return bson.E{Key: "sold", Value: false}
-	default:
-		return bson.E{}
 	}
 }
 

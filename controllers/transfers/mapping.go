@@ -90,15 +90,15 @@ func GetContractMethod(methodId string) ContractMethod {
 	}
 
 	switch methodId {
-	case "0x4e71d92d":
+	case string(constants.METHOD_ID_CLAIM):
 		return MethodClaim
-	case "0x0c679fa0":
+	case string(constants.METHOD_ID_LEVEl_UP):
 		return MethodLevelUp
-	case "0xc9d27afe":
+	case string(constants.METHOD_ID_VE_FLY_VOTE):
 		return MethodVeFlyVote
-	case "0xb6b55f25":
+	case string(constants.METHOD_ID_FLY_STAKE_DEPOSIT):
 		return MethodVeFlyDeposit
-	case "0xa59f3e0c":
+	case string(constants.METHOD_ID_BREEDING_ENTER):
 		return MethodBreedingEnter
 	default:
 		return MethodUnknown
