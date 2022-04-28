@@ -10,14 +10,12 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	baseshares "github.com/steschwa/hopper-analytics-api/controllers/base-shares"
 	"github.com/steschwa/hopper-analytics-api/controllers/hoppers"
 	"github.com/steschwa/hopper-analytics-api/controllers/markets"
 	"github.com/steschwa/hopper-analytics-api/controllers/prices"
 	"github.com/steschwa/hopper-analytics-api/controllers/supply"
 	"github.com/steschwa/hopper-analytics-api/controllers/transfers"
 	"github.com/steschwa/hopper-analytics-api/controllers/user"
-	"github.com/steschwa/hopper-analytics-api/controllers/votes"
 	"github.com/steschwa/hopper-analytics-collector/contracts"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
@@ -53,9 +51,9 @@ func main() {
 	server.Use(cors.New())
 
 	server.Get("/hoppers", hoppers.NewRouteHandler(mongoClient))
-	server.Get("/votes", votes.NewRouteHandler(mongoClient))
-	server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
-	server.Get("/base-shares/history", baseshares.NewHistoryRouteHandler(mongoClient))
+	// server.Get("/votes", votes.NewRouteHandler(mongoClient))
+	// server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
+	// server.Get("/base-shares/history", baseshares.NewHistoryRouteHandler(mongoClient))
 	server.Get("/prices", prices.NewRouteHandler(mongoClient))
 	server.Get("/market", markets.NewMarketHistoryRouteHandler(mongoClient))
 	server.Get("/transfers", transfers.NewRouteHandler())
