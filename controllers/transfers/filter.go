@@ -1,47 +1,17 @@
 package transfers
 
 import (
-	"strings"
-
 	"github.com/go-playground/validator/v10"
+	"github.com/steschwa/hopper-analytics-collector/constants"
 )
 
 type (
-	TransferDirection int
-
 	TransfersFilter struct {
-		Direction TransferDirection `validate:"oneof=0 1"`
-		User      string            `validate:"required,eth_addr"`
+		Direction constants.TransferDirection `validate:"oneof=0 1"`
+		User      string                      `validate:"required,eth_addr"`
+		Method    constants.TransferMethod    `validate:"oneof=0 1 2 3 4 5 6"`
 	}
 )
-
-const (
-	FromUser TransferDirection = iota
-	ToUser
-)
-
-func TransferDirectionFromString(direction string) TransferDirection {
-	lowerCased := strings.ToLower(direction)
-
-	switch lowerCased {
-	case "out", "from":
-		return FromUser
-	case "in", "to":
-		return ToUser
-	default:
-		return FromUser
-	}
-}
-func (direction TransferDirection) String() string {
-	switch direction {
-	case FromUser:
-		return "out"
-	case ToUser:
-		return "in"
-	default:
-		return "out"
-	}
-}
 
 func ValidateFilter(filter TransfersFilter) error {
 	validate := validator.New()

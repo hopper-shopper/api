@@ -6,19 +6,21 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
-	"github.com/steschwa/hopper-analytics-api/graph"
-	"github.com/steschwa/hopper-analytics-api/models"
 	"github.com/steschwa/hopper-analytics-api/utils"
+	"github.com/steschwa/hopper-analytics-collector/constants"
+	"github.com/steschwa/hopper-analytics-collector/graph"
 )
 
 func NewHistoryRouteHandler() controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		transferDirection := TransferDirectionFromString(ctx.Query("direction", FromUser.String()))
+		transferDirection := constants.TransferDirectionFromString(ctx.Query("direction", constants.TransferDirectionToUser.String()))
 		user := ctx.Query("user")
+		transferMethod := constants.TransferMethodFromString(ctx.Query("type", constants.TransferMethodAny.String()))
 
 		transfersFilter := TransfersFilter{
 			Direction: transferDirection,
 			User:      user,
+			Method:    transferMethod,
 		}
 		err := ValidateFilter(transfersFilter)
 		if err != nil {
@@ -27,12 +29,11 @@ func NewHistoryRouteHandler() controllers.RouteHandler {
 		}
 
 		queryClient := graph.NewTransfersGraphClient()
-		transfers := []models.Transfer{}
-		if transfersFilter.Direction == FromUser {
-			transfers, err = queryClient.FetchTransfersFromUser(transfersFilter.User)
-		} else if transfersFilter.Direction == ToUser {
-			transfers, err = queryClient.FetchTransfersToUser(transfersFilter.User)
-		}
+		transfers, err := queryClient.FetchFilteredTransfers(graph.TransfersFilter{
+			User:      transfersFilter.User,
+			Direction: transfersFilter.Direction,
+			MethodId:  transfersFilter.Method.ToMethodId(),
+		})
 
 		if err != nil {
 			log.Println(err)
@@ -42,8 +43,9 @@ func NewHistoryRouteHandler() controllers.RouteHandler {
 
 		return ctx.JSON(fiber.Map{
 			"fitler": fiber.Map{
-				"user":      user,
-				"direction": transferDirection.String(),
+				"user":      transfersFilter.User,
+				"direction": transfersFilter.Direction.String(),
+				"type":      transfersFilter.Method.String(),
 			},
 			"data": formatTransfers(transfers),
 		})
@@ -54,14 +56,14 @@ func NewHistoryRouteHandler() controllers.RouteHandler {
 // Response formatters
 // ----------------------------------------
 
-func formatTransfers(transfers []models.Transfer) []fiber.Map {
+func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 	data := []fiber.Map{}
 
 	for _, transfer := range transfers {
 		amount, _ := utils.ToDecimal(transfer.Amount.String(), 18).Float64()
 
-		method := GetContractMethod(transfer.MethodId)
-		if method == MethodUnknown {
+		method := constants.TransferMethodFromMethodId(transfer.MethodId)
+		if method == constants.TransferMethodAny {
 			continue
 		}
 
