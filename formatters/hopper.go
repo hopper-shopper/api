@@ -16,8 +16,8 @@ type (
 
 func NewHopperFormatter(mongoClient *mongo.Client) *HopperFormatter {
 	loader := prices.NewPriceLoader(mongoClient)
-	avaxUsd := loader.LoadAvaxUsdPrice()
-	flyUsd := loader.LoadFlyUsdPrice()
+	avaxUsd := loader.LoadLatestAvaxUsdPrice()
+	flyUsd := loader.LoadLatestFlyUsdPrice()
 
 	return &HopperFormatter{
 		AvaxPriceUsd: avaxUsd,

@@ -1,6 +1,7 @@
 package transfers
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -60,11 +61,25 @@ func NewHistoryRouteHandler() controllers.RouteHandler {
 func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 	data := []fiber.Map{}
 
+	unknownMethods := map[string][]string{}
+
 	for _, transfer := range transfers {
 		amount, _ := utils.ToDecimal(transfer.Amount.String(), 18).Float64()
 
 		method := constants.TransferMethodFromMethodId(transfer.MethodId)
 		if method == constants.TransferMethodAny {
+			key := transfer.Contract
+
+			if _, ok := unknownMethods[key]; !ok {
+				unknownMethods[key] = []string{}
+			}
+
+			current := unknownMethods[key]
+			newUnknown := []string{}
+			newUnknown = append(newUnknown, current...)
+			newUnknown = append(newUnknown, transfer.MethodId)
+
+			unknownMethods[key] = unique(newUnknown)
 			continue
 		}
 
@@ -76,7 +91,24 @@ func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 		})
 	}
 
+	for contract, methods := range unknownMethods {
+		fmt.Printf("%s: %s\n", contract, strings.Join(methods, " | "))
+	}
+
 	return data
+}
+
+func unique(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func getContractByName(contractAddr string) string {
@@ -103,6 +135,8 @@ func getContractByName(contractAddr string) string {
 		return "ve-fly"
 	case strings.ToLower(constants.MULTI_LEVEL_UP_CONTRACT):
 		return "multi-level-up"
+	case strings.ToLower(constants.JOE_ROUTER_02_CONTRACT):
+		return "joe-router"
 	default:
 		return "unknown"
 	}
