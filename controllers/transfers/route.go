@@ -101,6 +101,8 @@ func getContractByName(contractAddr string) string {
 		return "fly"
 	case strings.ToLower(constants.VE_FLY_CONTRACT):
 		return "ve-fly"
+	case strings.ToLower(constants.MULTI_LEVEL_UP_CONTRACT):
+		return "multi-level-up"
 	default:
 		return "unknown"
 	}
