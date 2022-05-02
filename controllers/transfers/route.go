@@ -1,9 +1,9 @@
 package transfers
 
 import (
-	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
@@ -61,25 +61,19 @@ func NewHistoryRouteHandler() controllers.RouteHandler {
 func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 	data := []fiber.Map{}
 
-	unknownMethods := map[string][]string{}
-
 	for _, transfer := range transfers {
 		amount, _ := utils.ToDecimal(transfer.Amount.String(), 18).Float64()
 
 		method := constants.TransferMethodFromMethodId(transfer.MethodId)
 		if method == constants.TransferMethodAny {
-			key := transfer.Contract
-
-			if _, ok := unknownMethods[key]; !ok {
-				unknownMethods[key] = []string{}
-			}
-
-			current := unknownMethods[key]
-			newUnknown := []string{}
-			newUnknown = append(newUnknown, current...)
-			newUnknown = append(newUnknown, transfer.MethodId)
-
-			unknownMethods[key] = unique(newUnknown)
+			event := sentry.NewEvent()
+			event.Message = "Unknown FLY transfer methodId found"
+			event.Tags["from"] = transfer.From
+			event.Tags["to"] = transfer.To
+			event.Tags["timestamp"] = transfer.Timestamp.Format(time.RFC3339)
+			event.Tags["contract"] = transfer.Contract
+			event.Tags["methodId"] = transfer.MethodId
+			sentry.CaptureEvent(event)
 			continue
 		}
 
@@ -91,24 +85,7 @@ func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 		})
 	}
 
-	for contract, methods := range unknownMethods {
-		fmt.Printf("%s: %s\n", contract, strings.Join(methods, " | "))
-	}
-
 	return data
-}
-
-func unique(slice []string) []string {
-	keys := make(map[string]bool)
-	list := []string{}
-
-	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			list = append(list, entry)
-		}
-	}
-	return list
 }
 
 func getContractByName(contractAddr string) string {
