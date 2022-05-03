@@ -181,8 +181,8 @@ func (filter PriceFilter) ToMongoFilter() bson.D {
 }
 
 func (filter PriceFilter) ToMongoAggregationFilter(at time.Time) bson.D {
-	from := at.Add(time.Minute * 10 * -1)
-	to := at.Add(time.Minute * 10)
+	from := at.Add(time.Minute * 60 * -1)
+	to := at.Add(time.Minute * 60)
 
 	return bson.D{{
 		Key: "$match",
