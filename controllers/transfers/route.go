@@ -3,7 +3,6 @@ package transfers
 import (
 	"log"
 	"strings"
-	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
@@ -66,14 +65,6 @@ func formatTransfers(transfers []graph.Transfer) []fiber.Map {
 
 		method := constants.TransferMethodFromMethodId(transfer.MethodId)
 		if method == constants.TransferMethodAny {
-			event := sentry.NewEvent()
-			event.Message = "Unknown FLY transfer methodId found"
-			event.Tags["from"] = transfer.From
-			event.Tags["to"] = transfer.To
-			event.Tags["timestamp"] = transfer.Timestamp.Format(time.RFC3339)
-			event.Tags["contract"] = transfer.Contract
-			event.Tags["methodId"] = transfer.MethodId
-			sentry.CaptureEvent(event)
 			continue
 		}
 
