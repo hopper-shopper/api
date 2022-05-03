@@ -1,3 +1,4 @@
 /bin/
 caprover.tar
 .env
+staging.env
