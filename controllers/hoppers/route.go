@@ -17,9 +17,9 @@ import (
 
 func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		adventure := AdventureFilterFromString(ctx.Query("adventure", AnyAdventure.String()))
-		permit := PermitFilterFromString(ctx.Query("permit", AnyPermit.String()))
-		market := MarketFilterFromString(ctx.Query("market", AnyMarket.String()))
+		adventure := AdventureFilterFromString(ctx.Query("adventure", string(AnyAdventure)))
+		permit := PermitFilterFromString(ctx.Query("permit", string(AnyPermit)))
+		market := MarketFilterFromString(ctx.Query("market", string(AnyMarket)))
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
 		owner := ctx.Query("owner")
 
@@ -60,9 +60,9 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{
-				"adventure": adventure.String(),
-				"permit":    permit.String(),
-				"market":    market.String(),
+				"adventure": adventure,
+				"permit":    permit,
+				"market":    market,
 				"tokenIds":  tokenIds,
 			},
 			"data": formatter.FormatAll(hoppers),
@@ -88,17 +88,17 @@ func getMongoFilter(hoppersFilter HoppersFilter) bson.D {
 func getAdventureFilter(adventureFilter AdventureFilter) bson.E {
 	switch adventureFilter {
 	case PondAdventure:
-		return bson.E{Key: "adventure", Value: "pond"}
+		return bson.E{Key: "activity", Value: models.HopperActivityPond}
 	case StreamAdventure:
-		return bson.E{Key: "adventure", Value: "stream"}
+		return bson.E{Key: "activity", Value: models.HopperActivityStream}
 	case SwampAdventure:
-		return bson.E{Key: "adventure", Value: "swamp"}
+		return bson.E{Key: "activity", Value: models.HopperActivitySwamp}
 	case RiverAdventure:
-		return bson.E{Key: "adventure", Value: "river"}
+		return bson.E{Key: "activity", Value: models.HopperActivityRiver}
 	case ForestAdventure:
-		return bson.E{Key: "adventure", Value: "forest"}
+		return bson.E{Key: "activity", Value: models.HopperActivityForest}
 	case GreatLakeAdventure:
-		return bson.E{Key: "adventure", Value: "great-lake"}
+		return bson.E{Key: "activity", Value: models.HopperActivityGreatLake}
 	default:
 		return bson.E{}
 	}
@@ -118,9 +118,13 @@ func getPermitFilter(permitFilter PermitFilter) bson.E {
 func getMarketFilter(marketFilter MarketFilter) bson.E {
 	switch marketFilter {
 	case OnMarket:
-		return bson.E{Key: "listingActive", Value: true}
+		return bson.E{Key: "activity", Value: models.HopperActivityMarketplace}
 	case OffMarket:
-		return bson.E{Key: "listingActive", Value: false}
+		return bson.E{
+			Key: "$not",
+			Value: bson.M{
+				"activity": models.HopperActivityMarketplace,
+			}}
 	default:
 		return bson.E{}
 	}

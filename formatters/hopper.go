@@ -40,8 +40,7 @@ func (formatter *HopperFormatter) Format(hopper models.HopperDocument) fiber.Map
 		"level":        hopper.Level,
 		"levelCosts":   avaxLevelCosts,
 		"image":        hopper.Image,
-		"inAdventure":  hopper.InAdventure,
-		"adventure":    hopper.Adventure,
+		"activity":     hopper.Activity,
 		"rating": fiber.Map{
 			"pond":      hopper.RatingPond,
 			"stream":    hopper.RatingStream,
@@ -58,10 +57,7 @@ func (formatter *HopperFormatter) Format(hopper models.HopperDocument) fiber.Map
 			"forest":    hopper.BaseFlyForest,
 			"greatLake": hopper.BaseFlyGreatLake,
 		},
-		"listing": fiber.Map{
-			"active": hopper.ListingActive,
-			"price":  hopper.ListingPrice,
-		},
+		"price": hopper.MarketPrice,
 	}
 }
 

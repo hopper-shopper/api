@@ -7,40 +7,40 @@ import (
 )
 
 type (
-	AdventureFilter int
-	MarketFilter    int
-	PermitFilter    int
+	AdventureFilter string
+	MarketFilter    string
+	PermitFilter    string
 
 	HoppersFilter struct {
-		Adventure AdventureFilter `validate:"oneof=0 1 2 3 4 5 6"`
-		Market    MarketFilter    `validate:"oneof=0 1 2"`
-		Permit    PermitFilter    `validate:"oneof=0 1 2 3"`
+		Adventure AdventureFilter `validate:"oneof=any pond stream swamp river forest great-lake"`
+		Market    MarketFilter    `validate:"oneof=any yes no"`
+		Permit    PermitFilter    `validate:"oneof=any river forest great-lake"`
 		TokenIds  []string        `validate:"omitempty,min=0,dive,numeric,min=1,max=4"`
 		Owner     string          `validate:"omitempty,eth_addr"`
 	}
 )
 
 const (
-	AnyAdventure AdventureFilter = iota
-	PondAdventure
-	StreamAdventure
-	SwampAdventure
-	RiverAdventure
-	ForestAdventure
-	GreatLakeAdventure
+	AnyAdventure       AdventureFilter = "any"
+	PondAdventure      AdventureFilter = "pond"
+	StreamAdventure    AdventureFilter = "stream"
+	SwampAdventure     AdventureFilter = "swamp"
+	RiverAdventure     AdventureFilter = "river"
+	ForestAdventure    AdventureFilter = "forest"
+	GreatLakeAdventure AdventureFilter = "great-lake"
 )
 
 const (
-	AnyMarket MarketFilter = iota
-	OnMarket
-	OffMarket
+	AnyMarket MarketFilter = "any"
+	OnMarket  MarketFilter = "yes"
+	OffMarket MarketFilter = "no"
 )
 
 const (
-	AnyPermit PermitFilter = iota
-	RiverPermit
-	ForestPermit
-	GreatLakePermit
+	AnyPermit       PermitFilter = "any"
+	RiverPermit     PermitFilter = "river"
+	ForestPermit    PermitFilter = "forest"
+	GreatLakePermit PermitFilter = "great-lake"
 )
 
 func AdventureFilterFromString(adventure string) AdventureFilter {
@@ -63,24 +63,6 @@ func AdventureFilterFromString(adventure string) AdventureFilter {
 		return AnyAdventure
 	}
 }
-func (adventureFilter AdventureFilter) String() string {
-	switch adventureFilter {
-	case PondAdventure:
-		return "pond"
-	case StreamAdventure:
-		return "stream"
-	case SwampAdventure:
-		return "swamp"
-	case RiverAdventure:
-		return "river"
-	case ForestAdventure:
-		return "forest"
-	case GreatLakeAdventure:
-		return "great-lake"
-	default:
-		return "any"
-	}
-}
 
 func MarketFilterFromString(market string) MarketFilter {
 	lowerCased := strings.ToLower(market)
@@ -92,17 +74,6 @@ func MarketFilterFromString(market string) MarketFilter {
 		return OffMarket
 	default:
 		return AnyMarket
-	}
-}
-
-func (marketFilter MarketFilter) String() string {
-	switch marketFilter {
-	case OnMarket:
-		return "yes"
-	case OffMarket:
-		return "no"
-	default:
-		return "any"
 	}
 }
 
@@ -118,19 +89,6 @@ func PermitFilterFromString(permit string) PermitFilter {
 		return GreatLakePermit
 	default:
 		return AnyPermit
-	}
-}
-
-func (permitFilter PermitFilter) String() string {
-	switch permitFilter {
-	case RiverPermit:
-		return "river"
-	case ForestPermit:
-		return "forest"
-	case GreatLakePermit:
-		return "great-lake"
-	default:
-		return "any"
 	}
 }
 

@@ -16,9 +16,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// TODO Use new HopperDocument schema `activity`
+
 func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		adventure := hoppers.AdventureFilterFromString(ctx.Query("adventure", hoppers.AnyAdventure.String()))
+		adventure := hoppers.AdventureFilterFromString(ctx.Query("adventure", string(hoppers.AnyAdventure)))
 
 		baseSharesCollection := &db.BaseSharesCollection{
 			Connection: mongoClient,
@@ -54,7 +56,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{
-				"adventure": adventure.String(),
+				"adventure": adventure,
 			},
 			"data": formatBaseShares(baseShares),
 		})
