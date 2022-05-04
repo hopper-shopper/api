@@ -30,6 +30,11 @@ func (formatter *HopperFormatter) Format(hopper models.HopperDocument) fiber.Map
 	avaxPerFly := formatter.FlyPriceUsd / formatter.AvaxPriceUsd
 	avaxLevelCosts := cumulatedLevelCosts * avaxPerFly
 
+	marketPrice := hopper.MarketPrice
+	if hopper.Activity != models.HopperActivityMarketplace {
+		marketPrice = 0
+	}
+
 	return fiber.Map{
 		"tokenId":      hopper.TokenId,
 		"strength":     hopper.Strength,
@@ -57,7 +62,7 @@ func (formatter *HopperFormatter) Format(hopper models.HopperDocument) fiber.Map
 			"forest":    hopper.BaseFlyForest,
 			"greatLake": hopper.BaseFlyGreatLake,
 		},
-		"price": hopper.MarketPrice,
+		"price": marketPrice,
 	}
 }
 
