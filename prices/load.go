@@ -16,7 +16,7 @@ import (
 
 type (
 	PriceLoader struct {
-		Mongo *mongo.Client
+		DbClient *db.MongoDbClient
 	}
 
 	PriceFilter struct {
@@ -29,15 +29,15 @@ type (
 	}
 )
 
-func NewPriceLoader(mongoClient *mongo.Client) *PriceLoader {
+func NewPriceLoader(dbClient *db.MongoDbClient) *PriceLoader {
 	return &PriceLoader{
-		Mongo: mongoClient,
+		DbClient: dbClient,
 	}
 }
 
 func (loader *PriceLoader) loadPrice(filter PriceFilter) float64 {
 	pricesCollection := &db.PricesCollection{
-		Connection: loader.Mongo,
+		Client: loader.DbClient,
 	}
 	cursor := pricesCollection.GetCollection().FindOne(
 		context.Background(),
@@ -56,7 +56,7 @@ func (loader *PriceLoader) loadPrice(filter PriceFilter) float64 {
 
 func (loader *PriceLoader) LoadHistoricalPrice(filter PriceFilter, at time.Time) float64 {
 	pricesCollection := &db.PricesCollection{
-		Connection: loader.Mongo,
+		Client: loader.DbClient,
 	}
 
 	grouping := bson.D{{

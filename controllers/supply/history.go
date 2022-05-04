@@ -11,7 +11,7 @@ import (
 
 type (
 	SupplyHistoryLoader struct {
-		Mongo *mongo.Client
+		Client *db.MongoDbClient
 	}
 
 	AggregatedSupply struct {
@@ -20,15 +20,15 @@ type (
 	}
 )
 
-func NewSupplyHistoryLoader(mongoClient *mongo.Client) *SupplyHistoryLoader {
+func NewSupplyHistoryLoader(dbClient *db.MongoDbClient) *SupplyHistoryLoader {
 	return &SupplyHistoryLoader{
-		Mongo: mongoClient,
+		Client: dbClient,
 	}
 }
 
 func (loader *SupplyHistoryLoader) Load(filter SupplyFilter) ([]AggregatedSupply, error) {
 	collection := &db.SuppliesCollection{
-		Connection: loader.Mongo,
+		Client: loader.Client,
 	}
 	cursor, err := collection.GetCollection().Aggregate(
 		context.Background(),

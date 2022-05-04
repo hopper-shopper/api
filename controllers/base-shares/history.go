@@ -13,7 +13,7 @@ import (
 
 type (
 	BaseSharesHistoryLoader struct {
-		Mongo *mongo.Client
+		DbClient *db.MongoDbClient
 	}
 
 	AggregatedBaseShare struct {
@@ -23,15 +23,15 @@ type (
 	}
 )
 
-func NewBaseSharesHistoryLoader(mongoClient *mongo.Client) *BaseSharesHistoryLoader {
+func NewBaseSharesHistoryLoader(dbClient *db.MongoDbClient) *BaseSharesHistoryLoader {
 	return &BaseSharesHistoryLoader{
-		Mongo: mongoClient,
+		DbClient: dbClient,
 	}
 }
 
 func (loader *BaseSharesHistoryLoader) Load(filter BaseShareByAdventureFilter) ([]AggregatedBaseShare, error) {
 	collection := &db.BaseSharesCollection{
-		Connection: loader.Mongo,
+		Client: loader.DbClient,
 	}
 	cursor, err := collection.GetCollection().Aggregate(
 		context.Background(),

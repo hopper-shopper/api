@@ -12,18 +12,17 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // TODO Use new HopperDocument schema `activity`
 
-func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := hoppers.AdventureFilterFromString(ctx.Query("adventure", string(hoppers.AnyAdventure)))
 
 		baseSharesCollection := &db.BaseSharesCollection{
-			Connection: mongoClient,
+			Client: dbClient,
 		}
 
 		var baseSharesLimit int64 = 1
@@ -63,7 +62,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 	}
 }
 
-func NewHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewHistoryRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := constants.AdventureFromString(ctx.Query("adventure"))
 
@@ -76,7 +75,7 @@ func NewHistoryRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler 
 			return controllers.CreateValidationError(ctx)
 		}
 
-		historyLoader := NewBaseSharesHistoryLoader(mongoClient)
+		historyLoader := NewBaseSharesHistoryLoader(dbClient)
 		aggregates, err := historyLoader.Load(filter)
 		if err != nil {
 			sentry.CaptureException(err)

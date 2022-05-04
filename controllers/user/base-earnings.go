@@ -10,21 +10,20 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
 	UserBaseFlyCalculator struct {
 		OnChainClient *contracts.OnChainClient
-		Mongo         *mongo.Client
+		DbClient      *db.MongoDbClient
 	}
 )
 
-func NewUserBaseFlyCalculator(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) *UserBaseFlyCalculator {
+func NewUserBaseFlyCalculator(onChainClient *contracts.OnChainClient, dbClient *db.MongoDbClient) *UserBaseFlyCalculator {
 	return &UserBaseFlyCalculator{
 		OnChainClient: onChainClient,
-		Mongo:         mongoClient,
+		DbClient:      dbClient,
 	}
 }
 
@@ -46,7 +45,7 @@ func (calculator *UserBaseFlyCalculator) CalculateBaseFly(adventure constants.Ad
 
 func (calculator *UserBaseFlyCalculator) loadLatestTotalBaseShareByAdventure(adventure constants.Adventure) (decimal.Decimal, error) {
 	baseSharesCollection := &db.BaseSharesCollection{
-		Connection: calculator.Mongo,
+		Client: calculator.DbClient,
 	}
 	result := baseSharesCollection.GetCollection().FindOne(
 		context.Background(),

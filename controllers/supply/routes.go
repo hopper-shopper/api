@@ -6,10 +6,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
-	"go.mongodb.org/mongo-driver/mongo"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
-func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		supplyType := SupplyTypeFromString(ctx.Query("type"))
 
@@ -22,7 +22,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			return controllers.CreateValidationError(ctx)
 		}
 
-		loader := NewSupplyHistoryLoader(mongoClient)
+		loader := NewSupplyHistoryLoader(dbClient)
 
 		aggregates, err := loader.Load(filter)
 		if err != nil {

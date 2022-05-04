@@ -8,15 +8,15 @@ import (
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/contracts"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ----------------------------------------
 // Response formatters
 // ----------------------------------------
 
-func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) controllers.RouteHandler {
+func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient, dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		user := ctx.Query("user")
 		adventure := constants.AdventureFromString(ctx.Query("adventure"))
@@ -31,7 +31,7 @@ func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient, mongoClient 
 			return controllers.CreateValidationError(ctx)
 		}
 
-		userCapCalculator := NewUserFlyGenerationCalculator(onChainClient, mongoClient)
+		userCapCalculator := NewUserFlyGenerationCalculator(onChainClient, dbClient)
 		flyGeneration, err := userCapCalculator.CalculateFlyGeneration(adventure, user)
 		if err != nil {
 			log.Println(err)
@@ -49,7 +49,7 @@ func NewUserCapRouteHandler(onChainClient *contracts.OnChainClient, mongoClient 
 	}
 }
 
-func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) controllers.RouteHandler {
+func NewUserEarnings(onChainClient *contracts.OnChainClient, dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		user := ctx.Query("user")
 		adventure := constants.AdventureFromString(ctx.Query("adventure"))
@@ -64,7 +64,7 @@ func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.
 			return controllers.CreateValidationError(ctx)
 		}
 
-		baseFlyCalculator := NewUserBaseFlyCalculator(onChainClient, mongoClient)
+		baseFlyCalculator := NewUserBaseFlyCalculator(onChainClient, dbClient)
 		baseFly, err := baseFlyCalculator.CalculateBaseFly(adventure, user)
 		if err != nil {
 			log.Println(err)
@@ -72,7 +72,7 @@ func NewUserEarnings(onChainClient *contracts.OnChainClient, mongoClient *mongo.
 			return controllers.CreateServerError(ctx)
 		}
 
-		boostedFlyCalculator := NewUserBoostedFlyCalculator(onChainClient, mongoClient)
+		boostedFlyCalculator := NewUserBoostedFlyCalculator(onChainClient, dbClient)
 		boostedFly, err := boostedFlyCalculator.CalculateBoostedFly(adventure, user)
 		if err != nil {
 			log.Println(err)

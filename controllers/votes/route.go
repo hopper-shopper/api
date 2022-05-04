@@ -11,18 +11,17 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // TODO Use new HopperDocument schema `activity`
 
-func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := hoppers.AdventureFilterFromString(ctx.Query("adventure", string(hoppers.AnyAdventure)))
 
 		votesCollection := &db.VotesCollection{
-			Connection: mongoClient,
+			Client: dbClient,
 		}
 
 		var votesLimit int64 = 1

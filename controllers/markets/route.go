@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-collector/models"
-	"go.mongodb.org/mongo-driver/mongo"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
-func NewMarketHistoryByHopper(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewMarketHistoryByHopper(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
 		sold := SoldFilterFromString(ctx.Query("sold", AnySold.String()))
@@ -26,7 +26,7 @@ func NewMarketHistoryByHopper(mongoClient *mongo.Client) controllers.RouteHandle
 			return controllers.CreateValidationError(ctx)
 		}
 
-		loader := NewMarketListingsLoader(mongoClient)
+		loader := NewMarketListingsLoader(dbClient)
 		listings, err := loader.Load(marketsFilter)
 		if err != nil {
 			log.Println(err)

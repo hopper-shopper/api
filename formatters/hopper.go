@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/prices"
 	"github.com/steschwa/hopper-analytics-collector/models"
-	"go.mongodb.org/mongo-driver/mongo"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
 type (
@@ -14,8 +14,8 @@ type (
 	}
 )
 
-func NewHopperFormatter(mongoClient *mongo.Client) *HopperFormatter {
-	loader := prices.NewPriceLoader(mongoClient)
+func NewHopperFormatter(dbClient *db.MongoDbClient) *HopperFormatter {
+	loader := prices.NewPriceLoader(dbClient)
 	avaxUsd := loader.LoadLatestAvaxUsdPrice()
 	flyUsd := loader.LoadLatestFlyUsdPrice()
 

@@ -6,24 +6,23 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type (
 	MarketListingsLoader struct {
-		Mongo *mongo.Client
+		Client *db.MongoDbClient
 	}
 )
 
-func NewMarketListingsLoader(mongoClient *mongo.Client) *MarketListingsLoader {
+func NewMarketListingsLoader(dbClient *db.MongoDbClient) *MarketListingsLoader {
 	return &MarketListingsLoader{
-		Mongo: mongoClient,
+		Client: dbClient,
 	}
 }
 
 func (loader *MarketListingsLoader) Load(filter MarketsFilter) ([]models.ListingDocument, error) {
 	listingsCollection := &db.MarketsCollection{
-		Connection: loader.Mongo,
+		Client: loader.Client,
 	}
 	cursor, err := listingsCollection.GetCollection().Find(
 		context.Background(),

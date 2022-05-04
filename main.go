@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -23,6 +22,7 @@ import (
 const (
 	PORT      = "PORT"
 	MONGO_URI = "MONGO_URI"
+	MONGO_DB  = "MONGO_DB"
 )
 
 func main() {
@@ -31,15 +31,21 @@ func main() {
 		log.Fatalf("Missing environment variable %s\n", MONGO_URI)
 	}
 
+	databaseName := os.Getenv(MONGO_DB)
+	if databaseName == "" {
+		log.Fatalf("Missing environment variable %s\n", MONGO_DB)
+	}
+
 	initSentry()
 	defer sentry.Flush(2 * time.Second)
 
-	mongoClient, err := db.Connect(mongoUri)
+	dbClient := db.NewMongoDbClient(databaseName)
+	err := dbClient.Connect(mongoUri)
 	if err != nil {
 		sentry.CaptureException(err)
 		log.Fatalln(err)
 	}
-	defer mongoClient.Disconnect(context.Background())
+	defer dbClient.Disconnect()
 
 	onChainClient, err := contracts.NewOnChainClient()
 	if err != nil {
@@ -50,17 +56,17 @@ func main() {
 	server := fiber.New()
 	server.Use(cors.New())
 
-	server.Get("/hoppers", hoppers.NewRouteHandler(mongoClient))
+	server.Get("/hoppers", hoppers.NewRouteHandler(dbClient))
 	// server.Get("/votes", votes.NewRouteHandler(mongoClient))
 	// server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
 	// server.Get("/base-shares/history", baseshares.NewHistoryRouteHandler(mongoClient))
-	server.Get("/prices", prices.NewLatestPriceRouteHandler(mongoClient))
-	server.Get("/prices/historical", prices.NewHistoricalPriceRouteHandler(mongoClient))
-	server.Get("/market", markets.NewMarketHistoryByHopper(mongoClient))
+	server.Get("/prices", prices.NewLatestPriceRouteHandler(dbClient))
+	server.Get("/prices/historical", prices.NewHistoricalPriceRouteHandler(dbClient))
+	server.Get("/market", markets.NewMarketHistoryByHopper(dbClient))
 	server.Get("/transfers", transfers.NewHistoryRouteHandler())
-	server.Get("/user/cap", user.NewUserCapRouteHandler(onChainClient, mongoClient))
-	server.Get("/user/earnings", user.NewUserEarnings(onChainClient, mongoClient))
-	server.Get("/supply", supply.NewRouteHandler(mongoClient))
+	server.Get("/user/cap", user.NewUserCapRouteHandler(onChainClient, dbClient))
+	server.Get("/user/earnings", user.NewUserEarnings(onChainClient, dbClient))
+	server.Get("/supply", supply.NewRouteHandler(dbClient))
 
 	server.Listen(getServerAddress())
 }

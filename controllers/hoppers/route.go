@@ -12,10 +12,9 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		adventure := AdventureFilterFromString(ctx.Query("adventure", string(AnyAdventure)))
 		permit := PermitFilterFromString(ctx.Query("permit", string(AnyPermit)))
@@ -38,7 +37,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 		}
 
 		hoppersCollection := &db.HoppersCollection{
-			Connection: mongoClient,
+			Client: dbClient,
 		}
 		cursor, err := hoppersCollection.GetCollection().Find(
 			context.Background(),
@@ -56,7 +55,7 @@ func NewRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
 			return controllers.CreateServerError(ctx)
 		}
 
-		formatter := formatters.NewHopperFormatter(mongoClient)
+		formatter := formatters.NewHopperFormatter(dbClient)
 
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{

@@ -10,12 +10,12 @@ import (
 	"github.com/steschwa/hopper-analytics-api/controllers"
 	"github.com/steschwa/hopper-analytics-api/prices"
 	"github.com/steschwa/hopper-analytics-collector/constants"
-	"go.mongodb.org/mongo-driver/mongo"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
-func NewLatestPriceRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewLatestPriceRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		loader := prices.NewPriceLoader(mongoClient)
+		loader := prices.NewPriceLoader(dbClient)
 
 		avaxUsd := loader.LoadLatestAvaxUsdPrice()
 		avaxEur := loader.LoadLatestAvaxEurPrice()
@@ -47,7 +47,7 @@ func NewLatestPriceRouteHandler(mongoClient *mongo.Client) controllers.RouteHand
 	}
 }
 
-func NewHistoricalPriceRouteHandler(mongoClient *mongo.Client) controllers.RouteHandler {
+func NewHistoricalPriceRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		times := strings.Split(ctx.Query("at"), ",")
 		coin := ctx.Query("coin", "avax")
@@ -64,7 +64,7 @@ func NewHistoricalPriceRouteHandler(mongoClient *mongo.Client) controllers.Route
 			return controllers.CreateValidationError(ctx)
 		}
 
-		loader := prices.NewPriceLoader(mongoClient)
+		loader := prices.NewPriceLoader(dbClient)
 		priceFilter := prices.PriceFilter{
 			Coin:     constants.CoingeckoIdFromString(filter.Coin, constants.COINGECKO_AVAX),
 			Currency: constants.CoingeckoCurrenyFromString(filter.Currency),

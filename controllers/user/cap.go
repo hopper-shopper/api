@@ -7,13 +7,13 @@ import (
 	"github.com/steschwa/hopper-analytics-api/utils"
 	"github.com/steschwa/hopper-analytics-collector/constants"
 	"github.com/steschwa/hopper-analytics-collector/contracts"
-	"go.mongodb.org/mongo-driver/mongo"
+	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
 type (
 	UserFlyGenerationCalculator struct {
 		OnChainClient *contracts.OnChainClient
-		MongoClient   *mongo.Client
+		DbClient      *db.MongoDbClient
 	}
 
 	UserAdventureFlyGeneration struct {
@@ -23,10 +23,10 @@ type (
 	}
 )
 
-func NewUserFlyGenerationCalculator(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) *UserFlyGenerationCalculator {
+func NewUserFlyGenerationCalculator(onChainClient *contracts.OnChainClient, dbClient *db.MongoDbClient) *UserFlyGenerationCalculator {
 	return &UserFlyGenerationCalculator{
 		OnChainClient: onChainClient,
-		MongoClient:   mongoClient,
+		DbClient:      dbClient,
 	}
 }
 
@@ -47,13 +47,13 @@ func (calculator *UserFlyGenerationCalculator) CalculateFlyGeneration(adventure 
 
 	sumGenerated := big.NewInt(0).Add(userBaseGenerated, userBonusGenerated)
 
-	baseFlyCalculator := NewUserBaseFlyCalculator(calculator.OnChainClient, calculator.MongoClient)
+	baseFlyCalculator := NewUserBaseFlyCalculator(calculator.OnChainClient, calculator.DbClient)
 	baseFly, err := baseFlyCalculator.CalculateBaseFly(adventure, user)
 	if err != nil {
 		return UserAdventureFlyGeneration{}, err
 	}
 
-	boostedFlyCalculator := NewUserBoostedFlyCalculator(calculator.OnChainClient, calculator.MongoClient)
+	boostedFlyCalculator := NewUserBoostedFlyCalculator(calculator.OnChainClient, calculator.DbClient)
 	boostedFly, err := boostedFlyCalculator.CalculateBoostedFly(adventure, user)
 	if err != nil {
 		return UserAdventureFlyGeneration{}, err

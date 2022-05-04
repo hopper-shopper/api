@@ -11,21 +11,20 @@ import (
 	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
 	UserBoostedFlyCalculator struct {
 		OnChainClient *contracts.OnChainClient
-		Mongo         *mongo.Client
+		DbClient      *db.MongoDbClient
 	}
 )
 
-func NewUserBoostedFlyCalculator(onChainClient *contracts.OnChainClient, mongoClient *mongo.Client) *UserBoostedFlyCalculator {
+func NewUserBoostedFlyCalculator(onChainClient *contracts.OnChainClient, dbClient *db.MongoDbClient) *UserBoostedFlyCalculator {
 	return &UserBoostedFlyCalculator{
 		OnChainClient: onChainClient,
-		Mongo:         mongoClient,
+		DbClient:      dbClient,
 	}
 }
 
@@ -108,7 +107,7 @@ func (calculator *UserBoostedFlyCalculator) calculateVeSharePercent(adventure co
 
 func (calculator *UserBoostedFlyCalculator) loadLatestVoteDocument(adventure constants.Adventure) (models.VoteDocument, error) {
 	votesCollection := &db.VotesCollection{
-		Connection: calculator.Mongo,
+		Client: calculator.DbClient,
 	}
 	result := votesCollection.GetCollection().FindOne(
 		context.Background(),
