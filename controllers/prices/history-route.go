@@ -2,7 +2,6 @@ package prices
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -13,50 +12,17 @@ import (
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
-func NewLatestPriceRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
-	return func(ctx *fiber.Ctx) error {
-		loader := prices.NewPriceLoader(dbClient)
-
-		avaxUsd := loader.LoadLatestAvaxUsdPrice()
-		avaxEur := loader.LoadLatestAvaxEurPrice()
-		flyUsd := loader.LoadLatestFlyUsdPrice()
-		flyEur := loader.LoadLatestFlyEurPrice()
-		var avaxFly = 0.0
-		if flyUsd != 0 {
-			avaxFly = avaxUsd / flyUsd
-		}
-		var flyAvax = 0.0
-		if avaxUsd != 0 {
-			flyAvax = flyUsd / avaxUsd
-		}
-
-		return ctx.JSON(fiber.Map{
-			"data": fiber.Map{
-				"AVAX": fiber.Map{
-					"EUR": avaxEur,
-					"USD": avaxUsd,
-					"FLY": avaxFly,
-				},
-				"FLY": fiber.Map{
-					"EUR":  flyEur,
-					"USD":  flyUsd,
-					"AVAX": flyAvax,
-				},
-			},
-		})
-	}
-}
-
 func NewHistoricalPriceRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		times := strings.Split(ctx.Query("at"), ",")
-		coin := ctx.Query("coin", "avax")
-		currency := ctx.Query("currency", "usd")
-
 		filter := HistoricalPriceFilter{
-			Times:    times,
-			Coin:     coin,
-			Currency: currency,
+			Coin:     "avax",
+			Currency: "usd",
+		}
+
+		if err := ctx.BodyParser(&filter); err != nil {
+			log.Println(err)
+			sentry.CaptureException(err)
+			return controllers.CreateBadRequestError(ctx)
 		}
 
 		if err := ValidateFilter(filter); err != nil {
@@ -71,8 +37,8 @@ func NewHistoricalPriceRouteHandler(dbClient *db.MongoDbClient) controllers.Rout
 		}
 
 		prices := fiber.Map{}
-		for _, timeStr := range times {
-			time, err := time.Parse(time.RFC3339, timeStr)
+		for _, dateStr := range filter.Dates {
+			time, err := time.Parse(time.RFC3339, dateStr)
 			if err != nil {
 				log.Println(err)
 				sentry.CaptureException(err)
@@ -80,12 +46,12 @@ func NewHistoricalPriceRouteHandler(dbClient *db.MongoDbClient) controllers.Rout
 			}
 
 			price := loader.LoadHistoricalPrice(priceFilter, time)
-			prices[timeStr] = price
+			prices[dateStr] = price
 		}
 
 		return ctx.JSON(fiber.Map{
 			"filter": fiber.Map{
-				"at":       filter.Times,
+				"dates":    filter.Dates,
 				"coin":     priceFilter.Coin.String(),
 				"currency": priceFilter.Currency.String(),
 			},

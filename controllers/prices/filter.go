@@ -6,9 +6,9 @@ import (
 
 type (
 	HistoricalPriceFilter struct {
-		Times    []string `validate:"required,min=1,dive,datetime=2006-01-02T15:04:05Z07:00"`
-		Coin     string   `validate:"required,oneof=avax fly"`
-		Currency string   `validate:"required,oneof=usd eur"`
+		Dates    []string `json:"dates" validate:"required,min=1,dive,datetime=2006-01-02T15:04:05Z07:00"`
+		Coin     string   `json:"coin" validate:"required,oneof=avax fly"`
+		Currency string   `json:"currency" validate:"required,oneof=usd eur"`
 	}
 )
 
