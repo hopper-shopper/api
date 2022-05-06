@@ -15,8 +15,12 @@ type (
 	}
 
 	AggregatedSupply struct {
-		Datetime time.Time `bson:"datetime"`
-		Supply   float64   `bson:"supply"`
+		Datetime  time.Time `bson:"datetime"`
+		Supply    float64   `bson:"supply"`
+		Burned    float64   `bson:"burned"`
+		Staked    float64   `bson:"staked"`
+		Available float64   `bson:"available"`
+		Free      float64   `bson:"free"`
 	}
 )
 
@@ -26,13 +30,13 @@ func NewSupplyHistoryLoader(dbClient *db.MongoDbClient) *SupplyHistoryLoader {
 	}
 }
 
-func (loader *SupplyHistoryLoader) Load(filter SupplyFilter) ([]AggregatedSupply, error) {
-	collection := &db.SuppliesCollection{
+func (loader *SupplyHistoryLoader) Load() ([]AggregatedSupply, error) {
+	collection := &db.FlySuppliesCollection{
 		Client: loader.Client,
 	}
 	cursor, err := collection.GetCollection().Aggregate(
 		context.Background(),
-		getAggregationPipeline(filter),
+		getAggregationPipeline(),
 	)
 	if err != nil {
 		return []AggregatedSupply{}, err
@@ -46,31 +50,20 @@ func (loader *SupplyHistoryLoader) Load(filter SupplyFilter) ([]AggregatedSupply
 	return supplies, nil
 }
 
-func getAggregationPipeline(filter SupplyFilter) mongo.Pipeline {
+func getAggregationPipeline() mongo.Pipeline {
 	return mongo.Pipeline{
-		getAggregationFilter(filter),
 		getAggregationGrouping(),
 		getAggregationProjection(),
 		getAggregationSort(),
 	}
 }
-func getAggregationFilter(filter SupplyFilter) bson.D {
-	return bson.D{{
-		Key: "$match",
-		Value: bson.M{
-			"type": filter.Type.String(),
-		},
-	}}
-}
 func getAggregationGrouping() bson.D {
-	dateFormat := "%Y-%m-%d-%H"
-
 	return bson.D{{
 		Key: "$group",
 		Value: bson.M{
 			"_id": bson.M{
 				"$dateToString": bson.D{
-					{Key: "format", Value: dateFormat},
+					{Key: "format", Value: "%Y-%m-%d"},
 					{Key: "date", Value: "$timestamp"},
 				},
 			},
@@ -78,12 +71,24 @@ func getAggregationGrouping() bson.D {
 				"$first": bson.M{
 					"$dateTrunc": bson.M{
 						"date": "$timestamp",
-						"unit": "hour",
+						"unit": "day",
 					},
 				},
 			},
 			"supply": bson.M{
 				"$avg": "$supply",
+			},
+			"burned": bson.M{
+				"$avg": "$burned",
+			},
+			"staked": bson.M{
+				"$avg": "$staked",
+			},
+			"available": bson.M{
+				"$avg": "$available",
+			},
+			"free": bson.M{
+				"$avg": "$free",
 			},
 		},
 	}}
@@ -92,9 +97,13 @@ func getAggregationProjection() bson.D {
 	return bson.D{{
 		Key: "$project",
 		Value: bson.M{
-			"_id":      0,
-			"datetime": "$datetime",
-			"supply":   1,
+			"_id":       0,
+			"datetime":  "$datetime",
+			"supply":    1,
+			"burned":    1,
+			"staked":    1,
+			"available": 1,
+			"free":      1,
 		},
 	}}
 }

@@ -3,5 +3,5 @@
 TAR_FILE=caprover.tar
 
 tar czf $TAR_FILE captain-definition bin/
-export $(grep -v '^#' .env | xargs) && caprover deploy --tarFile $TAR_FILE -a $CAPROVER_APP -u $CAPROVER_URL --appToken $CAPROVER_TOKEN
+export $(grep -v '^#' prod.env | xargs) && caprover deploy --tarFile $TAR_FILE -a $CAPROVER_APP -u $CAPROVER_URL --appToken $CAPROVER_TOKEN
 rm $TAR_FILE

@@ -11,20 +11,9 @@ import (
 
 func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-		supplyType := SupplyTypeFromString(ctx.Query("type"))
-
-		filter := SupplyFilter{
-			Type: supplyType,
-		}
-		err := ValidateFilter(filter)
-		if err != nil {
-			log.Println(err)
-			return controllers.CreateValidationError(ctx)
-		}
-
 		loader := NewSupplyHistoryLoader(dbClient)
 
-		aggregates, err := loader.Load(filter)
+		aggregates, err := loader.Load()
 		if err != nil {
 			sentry.CaptureException(err)
 			log.Println(err)
@@ -32,9 +21,6 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 		}
 
 		return ctx.JSON(fiber.Map{
-			"filter": fiber.Map{
-				"type": supplyType,
-			},
 			"data": formatAggregates(aggregates),
 		})
 	}
@@ -48,8 +34,12 @@ func formatAggregates(aggregates []AggregatedSupply) []fiber.Map {
 	data := make([]fiber.Map, len(aggregates))
 	for i, supply := range aggregates {
 		data[i] = fiber.Map{
-			"datetime": supply.Datetime,
-			"supply":   supply.Supply,
+			"date":      supply.Datetime.Format("2006-01-02"),
+			"supply":    supply.Supply,
+			"burned":    supply.Burned,
+			"staked":    supply.Staked,
+			"available": supply.Available,
+			"free":      supply.Free,
 		}
 	}
 
