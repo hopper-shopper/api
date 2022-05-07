@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type (
@@ -35,23 +36,50 @@ func NewPriceLoader(dbClient *db.MongoDbClient) *PriceLoader {
 	}
 }
 
-func (loader *PriceLoader) loadPrice(filter PriceFilter) float64 {
+func (loader *PriceLoader) loadLatestPrice(filter PriceFilter) float64 {
 	pricesCollection := &db.PricesCollection{
 		Client: loader.DbClient,
 	}
-	cursor := pricesCollection.GetCollection().FindOne(
+
+	limit := int64(1)
+	cursor, err := pricesCollection.GetCollection().Find(
 		context.Background(),
 		filter.ToMongoFilter(),
+		&options.FindOptions{
+			Sort: bson.D{{
+				Key:   "timestamp",
+				Value: -1,
+			}},
+			Limit: &limit,
+		},
 	)
-
-	priceDocument := models.PriceDocument{}
-	if err := cursor.Decode(&priceDocument); err != nil {
+	if err != nil {
 		log.Println(err)
 		sentry.CaptureException(err)
 		return 0
 	}
 
-	return priceDocument.Price
+	docs := []models.PriceDocument{}
+	if err = cursor.All(context.Background(), &docs); err != nil {
+		log.Println(err)
+		sentry.CaptureException(err)
+		return 0
+	}
+
+	if len(docs) == 0 {
+		return 0
+	}
+
+	if len(docs) == 1 {
+		return docs[0].Price
+	}
+
+	total := 0.0
+	for _, doc := range docs {
+		total += doc.Price
+	}
+
+	return total / float64(len(docs))
 }
 
 func (loader *PriceLoader) LoadHistoricalPrice(filter PriceFilter, at time.Time) float64 {
@@ -122,26 +150,26 @@ func (loader *PriceLoader) LoadHistoricalPrice(filter PriceFilter, at time.Time)
 }
 
 func (loader *PriceLoader) LoadLatestAvaxUsdPrice() float64 {
-	return loader.loadPrice(PriceFilter{
+	return loader.loadLatestPrice(PriceFilter{
 		Coin:     constants.COINGECKO_AVAX,
 		Currency: constants.COINGECKO_USD,
 	})
 }
 func (loader *PriceLoader) LoadLatestAvaxEurPrice() float64 {
-	return loader.loadPrice(PriceFilter{
+	return loader.loadLatestPrice(PriceFilter{
 		Coin:     constants.COINGECKO_AVAX,
 		Currency: constants.COINGECKO_EUR,
 	})
 }
 
 func (loader *PriceLoader) LoadLatestFlyUsdPrice() float64 {
-	return loader.loadPrice(PriceFilter{
+	return loader.loadLatestPrice(PriceFilter{
 		Coin:     constants.COINGECKO_FLY,
 		Currency: constants.COINGECKO_USD,
 	})
 }
 func (loader *PriceLoader) LoadLatestFlyEurPrice() float64 {
-	return loader.loadPrice(PriceFilter{
+	return loader.loadLatestPrice(PriceFilter{
 		Coin:     constants.COINGECKO_FLY,
 		Currency: constants.COINGECKO_EUR,
 	})
