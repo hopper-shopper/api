@@ -14,7 +14,6 @@ import (
 
 func NewHoppersActivityRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
-
 		activityCollection := &db.HoppersActivityCollection{
 			Client: dbClient,
 		}

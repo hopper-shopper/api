@@ -22,6 +22,10 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 		tokenIds := TokenIdsFilterFromString(ctx.Query("tokenIds", ""))
 		owner := ctx.Query("owner")
 
+		formatOptions := controllers.ResponseFormatOptions{
+			Format: controllers.ResponseFormatFromString(ctx.Query("format", string(controllers.RESPONSE_JSON))),
+		}
+
 		hoppersFilter := HoppersFilter{
 			Adventure: adventure,
 			Market:    market,
@@ -56,16 +60,13 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 		}
 
 		formatter := formatters.NewHopperFormatter(dbClient)
+		if formatOptions.Format == controllers.RESPONSE_JSON {
+			return sendJsonResponse(ctx, formatter, hoppers)
+		} else if formatOptions.Format == controllers.RESPONSE_CSV {
+			return sendCsvResponse(ctx, formatter, hoppers)
+		}
 
-		return ctx.JSON(fiber.Map{
-			"filter": fiber.Map{
-				"adventure": adventure,
-				"permit":    permit,
-				"market":    market,
-				"tokenIds":  tokenIds,
-			},
-			"data": formatter.FormatAll(hoppers),
-		})
+		return controllers.CreateServerError(ctx)
 	}
 }
 
@@ -149,4 +150,18 @@ func getOwnerFilter(owner string) bson.E {
 		Key:   "owner",
 		Value: strings.ToLower(owner),
 	}
+}
+
+func sendJsonResponse(ctx *fiber.Ctx, formatter *formatters.HopperFormatter, hoppers []models.HopperDocument) error {
+	return ctx.JSON(fiber.Map{
+		"data": formatter.FormatAllJson(hoppers),
+	})
+}
+
+func sendCsvResponse(ctx *fiber.Ctx, formatter *formatters.HopperFormatter, hoppers []models.HopperDocument) error {
+	rows := formatter.FormatAllCsv(hoppers)
+
+	ctx.Set("Content-Type", "text/csv")
+
+	return ctx.SendString(strings.Join(rows, "\n"))
 }
