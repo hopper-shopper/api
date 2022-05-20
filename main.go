@@ -57,6 +57,7 @@ func main() {
 	server.Use(cors.New())
 
 	server.Get("/hoppers", hoppers.NewRouteHandler(dbClient))
+	server.Get("/hoppers/activity/history", hoppers.NewHoppersActivityHistoryRouteHandler(dbClient))
 	server.Get("/hoppers/activity", hoppers.NewHoppersActivityRouteHandler(dbClient))
 	// server.Get("/votes", votes.NewRouteHandler(mongoClient))
 	// server.Get("/base-shares", baseshares.NewRouteHandler(mongoClient))
