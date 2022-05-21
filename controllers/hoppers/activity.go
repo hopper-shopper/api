@@ -9,34 +9,6 @@ import (
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
-func NewHoppersActivityRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
-	return func(ctx *fiber.Ctx) error {
-		loader := NewHoppersActivityLoader(dbClient)
-		activity, err := loader.Latest()
-
-		if err != nil {
-			log.Println(err)
-			sentry.CaptureException(err)
-			return controllers.CreateServerError(ctx)
-		}
-
-		return ctx.JSON(fiber.Map{
-			"data": fiber.Map{
-				"adventure":   activity.Adventure,
-				"breeding":    activity.Breeding,
-				"pond":        activity.Pond,
-				"stream":      activity.Stream,
-				"swamp":       activity.Swamp,
-				"river":       activity.River,
-				"forest":      activity.Forest,
-				"greatLake":   activity.GreatLake,
-				"marketplace": activity.Marketplace,
-				"idle":        activity.Idle,
-			},
-		})
-	}
-}
-
 func NewHoppersActivityHistoryRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		loader := NewHoppersActivityLoader(dbClient)

@@ -159,7 +159,7 @@ func getAggregationProjection() bson.D {
 				"$trunc": "$adventure",
 			},
 			"pond": bson.M{
-				"$trunc": "$adventure",
+				"$trunc": "$pond",
 			},
 			"stream": bson.M{
 				"$trunc": "$stream",
