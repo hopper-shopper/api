@@ -6,6 +6,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/steschwa/hopper-analytics-api/controllers"
+	"github.com/steschwa/hopper-analytics-collector/models"
 	db "github.com/steschwa/hopper-analytics-collector/mongo"
 )
 
@@ -13,7 +14,7 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 	return func(ctx *fiber.Ctx) error {
 		loader := NewSupplyHistoryLoader(dbClient)
 
-		aggregates, err := loader.Load()
+		supplies, err := loader.Load()
 		if err != nil {
 			sentry.CaptureException(err)
 			log.Println(err)
@@ -21,7 +22,7 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 		}
 
 		return ctx.JSON(fiber.Map{
-			"data": formatAggregates(aggregates),
+			"data": formatSupplies(supplies),
 		})
 	}
 }
@@ -30,16 +31,16 @@ func NewRouteHandler(dbClient *db.MongoDbClient) controllers.RouteHandler {
 // Response formatters
 // ----------------------------------------
 
-func formatAggregates(aggregates []AggregatedSupply) []fiber.Map {
-	data := make([]fiber.Map, len(aggregates))
-	for i, supply := range aggregates {
+func formatSupplies(supplies []models.FlySupplyDocument) []fiber.Map {
+	data := make([]fiber.Map, len(supplies))
+	for i, supply := range supplies {
 		data[i] = fiber.Map{
-			"date":      supply.Datetime.Format("2006-01-02"),
-			"supply":    supply.Supply,
-			"burned":    supply.Burned,
-			"staked":    supply.Staked,
-			"available": supply.Available,
-			"free":      supply.Free,
+			"date":        supply.Timestamp.Format("2006-01-02"),
+			"minted":      supply.Minted,
+			"burned":      supply.Burned,
+			"circulating": supply.Circulating,
+			"staked":      supply.Staked,
+			"free":        supply.Free,
 		}
 	}
 
